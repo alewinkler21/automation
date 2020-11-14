@@ -1,0 +1,28 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head> 
+<title>User Login</title> 
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" type="image/png" href="{% static "automation/images/favicon.ico" %}"/>
+  <link rel="stylesheet" type="text/css" href="{% static 'automation/css/style.css' %}" />
+</head>
+<body>
+
+<div id="login_header">
+	<h1>User Login</h1>
+	{% if form.errors %}
+	<p>Your username and password didn't match! Please try again!</p>
+	{% endif %}
+	<form id="login_form" method="post" action=".">
+		{% csrf_token %}
+		<p><label for="id_username">Username</label>{{ form.username }}</p>
+		<p><label for="id_password">Password</label>{{ form.password }}</p>
+		<input type="hidden" name="next" value="/" />
+		<input type="submit" value=Login />
+	</form>	
+</div>
+</body>
+</html>
