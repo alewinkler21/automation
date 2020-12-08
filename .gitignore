@@ -96,3 +96,4 @@ raspautoenv/
 *.sqlite3
 
 node_modules/
+*.bak

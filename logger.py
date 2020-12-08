@@ -1,6 +1,6 @@
 import logging
 
-logging.basicConfig(format='%(asctime)s[%(levelname)s][%(threadName)s]:%(message)s', level=logging.DEBUG)
+logging.basicConfig(format='[%(levelname)s][%(threadName)s]:%(message)s', level=logging.DEBUG)
 log = logging.getLogger("AUTOMATION")
 
 def debug(message):

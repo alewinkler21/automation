@@ -11,12 +11,8 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 import logger
 
-from automation.models import GPIOOutputDevice, PioneerDevice, GPIODeviceAction, PioneerDeviceAction, DeviceGroup, \
-LightState, Alarm
-from automation.serializers import PioneerDeviceSerializer, GPIOOutputDeviceSerializer, DeviceGroupSerializer, \
-PioneeerDeviceActionSerializer, GPIODeviceActionSerializer, ListGPIODeviceActionSerializer, \
-ListPioneerDeviceActionSerializer, LightSensorSerializer, NotificationClientSerializer, \
-AlarmSerializer, AuthSerializer
+from automation.models import Relay, DeviceGroup, PirSensor, LightSensor, Alarm
+from automation.serializers import DeviceGroupSerializer, GPIODeviceSerializer, RelaySerializer, AuthSerializer, AlarmSerializer, RelayActionSerializer
 
 from automation.gpio import toggle_gpio
 from automation.pioneer import toggle_pioneer
@@ -39,78 +35,42 @@ class ListGroups(APIView):
         serializer = DeviceGroupSerializer(groups, many=True)
         return JSONResponse(serializer.data)
  
-class ListPioneerDevices(APIView):
-    authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
- 
-    def get(self, request, format=None):
-        devices = PioneerDevice.objects.filter(enabled=True)
-        serializer = PioneerDeviceSerializer(devices, many=True)
-        return JSONResponse(serializer.data)
-
-class ListGPIOOutputDevices(APIView):
+class ListRelays(APIView):
     authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
  
     def get(self, request, format=None):
-        devices = GPIOOutputDevice.objects.filter(enabled=True)
-        serializer = GPIOOutputDeviceSerializer(devices, many=True)
+        devices = Relay.objects.filter(enabled=True)
+        serializer = RelaySerializer(devices, many=True)
         return JSONResponse(serializer.data)
     
-class ListGPIODeviceActions(APIView):
-    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
- 
-    def get(self, request, format=None):
-        deviceActions = GPIODeviceAction.objects.order_by('-dateOfUse')[:10]
-        serializer = ListGPIODeviceActionSerializer(deviceActions, many=True)
-        return JSONResponse(serializer.data)
-
-class ListPioneerDeviceActions(APIView):
-    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
- 
-    def get(self, request, format=None):
-        deviceActions = PioneerDeviceAction.objects.order_by('-dateOfUse')[:10]
-        serializer = ListPioneerDeviceActionSerializer(deviceActions, many=True)
-        return JSONResponse(serializer.data)
-    
-class ListLightSensor(APIView):
-    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
- 
-    def get(self, request, format=None):
-        lightSensor = LightState.objects.order_by('-date')[:10]
-        serializer = LightSensorSerializer(lightSensor, many=True)
-        return JSONResponse(serializer.data)
-    
-class ToggleGPIODevice(APIView):
+class ToggleRelay(APIView):
     authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
  
     def post(self, request, format=None):
-        serializer = GPIODeviceActionSerializer(data=request.data)
+        serializer = RelayActionSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             data = serializer.validated_data
-            device = data['device']
+            relay = data['relay']
             
-            if device.address == '127.0.0.1':
-                # toggle local device
-                device.status = data['status']
-                toggle_gpio(device.status, device.pinNumber)
-                device.save()
-                if device.status:
+            if relay.address == '127.0.0.1':
+                # toggle local relay
+                relay.status = data['status']
+                toggle_gpio(relay.status, relay.pinNumber)
+                relay.save()
+                if relay.status:
                     # set automatic turn off
                     now = datetime.now(tz=timeZone)
-                    turnOffDatetime = now + timedelta(seconds=device.longTimeDuration)
-                    sharedMemory.set(device.address + '-' + str(device.id), str(turnOffDatetime))
-                    logger.debug("WebAPI: Set automatic turn off for device: {} Off: {}".format(device.name,
+                    turnOffDatetime = now + timedelta(seconds=relay.longTimeDuration)
+                    sharedMemory.set(relay.address + '-' + str(relay.id), str(turnOffDatetime))
+                    logger.debug("WebAPI: Set automatic turn off for relay: {} Off: {}".format(relay.name,
                                                                                                 turnOffDatetime.strftime("%Y-%m-%d %H:%M:%S")))
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
-                # toggle remote device
-                url = 'http://{}{}'.format(device.address, request.path)
+                # toggle remote relay
+                url = 'http://{}{}'.format(relay.address, request.path)
                 resp = requests.get(url, headers=request.headers, verify=False)
                 if resp.status_code == 201:
                     return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -118,41 +78,6 @@ class ToggleGPIODevice(APIView):
                     return Response(resp.reason, status=resp.status_code)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class TogglePioneerDevice(APIView):
-    authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
- 
-    def post(self, request, format=None):
-        serializer = PioneeerDeviceActionSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            data = serializer.validated_data
-            device = data['device']            
-            if not toggle_pioneer(data['status'], device):
-                return Response(serializer.data, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-            device.status = data['status']
-            device.save()
-#             if a pioneer device is turned on, turn off others
-            if device.status:
-                others = PioneerDevice.objects.exclude(id=device.id)
-                for o in others:
-                    o.status = False
-                    o.save()
-                
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-class RegisterNotificationClient(APIView):
-    authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
- 
-    def post(self, request, format=None):
-        serializer = NotificationClientSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 class GetAlarm(APIView):
     authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
@@ -163,7 +88,7 @@ class GetAlarm(APIView):
         return JSONResponse(serializer.data)
 
 class ToggleAlarm(APIView):
-    authentication_classes = (authentication.TokenAuthentication,)
+    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated,)
  
     def post(self, request, format=None):

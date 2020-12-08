@@ -10,16 +10,26 @@ class DataProvider extends Component {
       data: [],
       loaded: false,
       placeholder: "Loading..."
-    };
+  };
+  fetchData(){
+	fetch(this.props.endpoint)
+	  .then(response => {
+	    if (response.status !== 200) {
+	      return this.setState({ data: [], placeholder: "Something went wrong" });
+	    }
+	    return response.json();
+	  })
+	  .then(data => {
+		  this.setState({ data: data, loaded: true })
+	  });	  
+  }
   componentDidMount() {
-    fetch(this.props.endpoint)
-      .then(response => {
-        if (response.status !== 200) {
-          return this.setState({ placeholder: "Something went wrong" });
-        }
-        return response.json();
-      })
-      .then(data => this.setState({ data: data, loaded: true }));
+	  this.fetchData();
+  }
+  componentDidUpdate(prevProps) {
+	  if (this.props.endpoint !== prevProps.endpoint) {
+		  this.fetchData();
+	  }
   }
   render() {
     const { data, loaded, placeholder} = this.state;

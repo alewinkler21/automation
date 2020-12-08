@@ -1,13 +1,10 @@
 from django.contrib import admin
 
 # Register your models here.
-from automation.models import GPIOOutputDevice, PioneerDevice, DeviceGroup, GPIOOutputType, PioneerType,\
-    GPIOInputDevice, GPIOInputType
+from automation.models import Relay, DeviceGroup, PirSensor, LightSensor, Led
 
-admin.site.register(GPIOOutputDevice)
-admin.site.register(GPIOInputDevice)
-admin.site.register(PioneerDevice)
 admin.site.register(DeviceGroup)
-admin.site.register(GPIOOutputType)
-admin.site.register(GPIOInputType)
-admin.site.register(PioneerType)
+admin.site.register(Relay)
+admin.site.register(PirSensor)
+admin.site.register(LightSensor)
+admin.site.register(Led)

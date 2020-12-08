@@ -9,18 +9,19 @@ from queue import Queue
 from threading import Thread
 import logger as logger
 import indicator as indicator
+import signal
 
 #setup django in order to use models
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "raspberry.settings")
 django.setup()
-from automation.models import LightState, GPIOInputDevice
+from automation.models import LightState, LightSensor
 
 lightSensors = []
 queue = Queue()
 
 def init():
     global lightSensors
-    lightSensors = GPIOInputDevice.objects.filter(enabled=True, address='127.0.0.1', type__name = 'Light Sensor')
+    lightSensors = LightSensor.objects.filter(enabled=True, address='127.0.0.1')
     GPIO.setwarnings(False)
     GPIO.setmode(GPIO.BCM)
 
@@ -96,8 +97,15 @@ def main():
     
     lightSensorConsumer.join()
 
+def terminateProcess(signalNumber, frame):
+    print ('(SIGTERM) terminating the process')
+    GPIO.cleanup()
+    sys.exit()
+
 if __name__ == '__main__':
+    signal.signal(signal.SIGTERM, terminateProcess)
     try:
         main()
     except KeyboardInterrupt:
+        GPIO.cleanup()
         sys.exit()

@@ -24,7 +24,7 @@ def saveDeviceAction(device, status, tmstmp):
     action.dateOfUse = tmstmp
     action.status = status
     action.isAutomatic = False
-    action.device = device
+    action.relay = device
     action.save()
     # set device status
     device.status = status

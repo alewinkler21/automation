@@ -4,7 +4,7 @@ from time import sleep
 
 import re
 import threading
-from automation.models import PioneerType
+# from automation.models import PioneerType
 
 radio_volume = 81
 chromecast_volume = 91
@@ -15,10 +15,11 @@ def toggle_pioneer(status, device):
         if not status:
             pioneer.powerOff()
         else:
-            if device.type == PioneerType.objects.get(name="Radio"):
-                thread = threading.Thread(target=pioneer.radio,args=())
-            elif device.type == PioneerType.objects.get(name="Chromecast"):
-                thread = threading.Thread(target=pioneer.chromecast,args=())
+            print("do nothing")
+#             if device.type == PioneerType.objects.get(name="Radio"):
+#                 thread = threading.Thread(target=pioneer.radio,args=())
+#             elif device.type == PioneerType.objects.get(name="Chromecast"):
+#                 thread = threading.Thread(target=pioneer.chromecast,args=())
             if not thread is None:
                 thread.start()
         return True
@@ -28,7 +29,7 @@ def toggle_pioneer(status, device):
 class Pioneer:
 
     def __init__(self, device, sock=None):
-        self.device = device
+        self.relay = device
         if sock is None:
             try:
                 self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -96,8 +97,8 @@ class Pioneer:
 
     def connect(self):
         try:
-            self.sock.connect((self.device.address, 
-                               self.device.port))
+            self.sock.connect((self.relay.address, 
+                               self.relay.port))
             return True
         except socket.error:
             self.sock.close()

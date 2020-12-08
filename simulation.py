@@ -25,7 +25,7 @@ def putInSlot(action):
             "hour": action.dateOfUse.hour, 
             "minute": action.dateOfUse.minute, 
             "second": action.dateOfUse.second, 
-            "deviceId": action.device.id}
+            "deviceId": action.relay.id}
     
 def calculateDayActions():
     timeZone = pytz.timezone("UTC")
@@ -56,7 +56,7 @@ def calculateDayActions():
                             deviceSimulation.day = yesterday
                             deviceSimulation.status = row.status
                             deviceSimulation.actionTime = yesterday.replace(hour=row.hour, minute=row.minute, second=row.second)
-                            deviceSimulation.device = device
+                            deviceSimulation.relay = device
                             deviceSimulation.save()
                     except GPIOOutputDevice.DoesNotExist:
                         logger.error("Fail saving device simulation:", sys.exc_info()[0])

@@ -8,16 +8,16 @@ class Buttons extends Component {
   };
   state = {
 		  data: this.props.data
-		  };
+  };
   
-  toggleGPIODevice(el) {
+  toggleRelay(el) {
 	if (el.simulationEnabled) {
 		alert('No se puede utilizar manualmente cuando la simulación está activada. Desactive la simulación.');
 		return;
 	}
-	var url = 'togglegpiodevice/';
+	var url = 'togglerelay/';
 	
-	var data = {device: el.id, dateOfUse: new Date().toISOString(), status: !el.status};
+	var data = {relay: el.id, dateOfUse: new Date().toISOString(), status: !el.status};
 
     const value = '; ' + document.cookie;
     const parts = value.split('; ' + 'csrftoken' + '=');
@@ -47,6 +47,12 @@ class Buttons extends Component {
 	});
   }
   
+  componentDidUpdate() {
+	  if (this.state.data !== this.props.data) {
+		  this.setState({data: this.props.data});
+	  }
+  }
+  
   render() {
 	  if (!this.state.data) {
 		  return (<div className="column">No data retrieved from server</div>);
@@ -54,7 +60,7 @@ class Buttons extends Component {
 	  return (<ul className="column has-text-centered">  
 	  {this.state.data.map(el => (
 			  <li key={el.id}>
-	  		  <button className={el.status ? "button is-success" : "button is-black"} key={el.id} onClick={() => this.toggleGPIODevice(el)}>
+	  		  <button className={el.status ? "button is-success" : "button is-black"} key={el.id} onClick={() => this.toggleRelay(el)}>
 	  		  {el.name}
 	  		  </button>
 	  		  </li>
