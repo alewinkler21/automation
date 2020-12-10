@@ -17,27 +17,32 @@ class Camera extends Component {
   }
   
   render() {
-	  if (!this.state.data || this.state.data.length == 0) {
-		  return (<div className="column">No hay archivos multimedia</div>);
-	  }	  
-	  return (<div className="column has-text-centered">  
-	  {this.state.data.map(el => {
-			var extension = el.split('.').pop();
-			if (extension == 'jpg'){
-				return <figure class="image is-5by3" key={el}>
-						<a href={"camera/" + el} target="_blank">
-							<img src={"camera/" + el}/>
-						</a>
-						</figure>;
-			} else {
-				return <figure class="image" key={el}>
-						<video controls>
-							<source src={"camera/" + el} type="video/mp4" />
-						</video>
-						</figure>;
-			}
-	  })}
-	  </div>);
+	if (!this.state.data || this.state.data.length == 0) {
+		return (<div className="column">No hay archivos multimedia</div>);
+	}
+	// check if data is right for this rendering
+	let sample = this.state.data[0];
+	if (!(typeof sample === 'string' || sample instanceof String)) {
+		return "";
+	}
+	return (<div className="column has-text-centered">  
+				{this.state.data.map(el => {
+						var extension = el.split('.').pop();
+						if (extension == 'jpg'){
+							return <figure className="image is-5by3" key={el}>
+									<a href={"camera/" + el} target="_blank">
+										<img src={"camera/" + el}/>
+									</a>
+									</figure>;
+						} else {
+							return <figure className="image" key={el}>
+									<video controls>
+										<source src={"camera/" + el} type="video/mp4" />
+									</video>
+									</figure>;
+						}
+				})}
+				</div>);
   }
 }
 export default Camera;

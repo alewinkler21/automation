@@ -56,11 +56,16 @@ class Buttons extends Component {
   render() {
 	  if (!this.state.data || this.state.data.length == 0) {
 		return <div className="column">No hay controles configurados</div>;
-	  }	  
+	  }
+	  // check if data is right for this rendering
+	  let sample = this.state.data[0];
+	  if (!sample.id) {  
+		return "";
+	  }
 	  return <ul className="column has-text-centered">  
 	  {this.state.data.map(el => (
 			  <li key={el.id}>
-	  		  <button className={el.status ? "button is-success" : "button is-black"} key={el.id} onClick={() => this.toggleRelay(el)}>
+	  		  <button className={el.status ? "button is-success" : "button is-light"} key={el.id} onClick={() => this.toggleRelay(el)}>
 	  		  {el.name}
 	  		  </button>
 	  		  </li>

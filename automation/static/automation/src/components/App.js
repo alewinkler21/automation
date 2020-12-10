@@ -95,7 +95,7 @@ class App extends Component {
 			<div className="has-text-centered">
 				<nav className="navbar-menu is-active">
 					<div className="navbar-start">
-						<a className={`navbar-item ${this.state.alarmArmed ? "has-background-danger" : "has-background-grey-light"}`} href="#" onClick={() => this.toggleAlarm()}>Alarma</a>
+						<a className={this.state.alarmArmed ? "navbar-item has-background-danger" : "navbar-item"} href="#" onClick={() => this.toggleAlarm()}>Alarma</a>
 						<a className="navbar-item" href="#" onClick={() => this.navigate("controls")}>Controles</a>
 						<a className="navbar-item" href="#" onClick={() => this.navigate("camera")}>Cámara</a>
 						<a className="navbar-item" href="/admin" >Configuración</a>
