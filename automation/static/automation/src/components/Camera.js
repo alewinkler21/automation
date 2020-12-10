@@ -17,22 +17,22 @@ class Camera extends Component {
   }
   
   render() {
-	  if (!this.state.data) {
-		  return (<div className="column">No captured images</div>);
+	  if (!this.state.data || this.state.data.length == 0) {
+		  return (<div className="column">No hay archivos multimedia</div>);
 	  }	  
 	  return (<div className="column has-text-centered">  
 	  {this.state.data.map(el => {
-			var extension = el.name.split('.').pop();
+			var extension = el.split('.').pop();
 			if (extension == 'jpg'){
-				return <figure class="image is-5by3" key={el.name}>
-						<a href={"http://192.168.0.165/camera/" + el.name} target="_blank">
-							<img src={"http://192.168.0.165/camera/" + el.name}/>
+				return <figure class="image is-5by3" key={el}>
+						<a href={"camera/" + el} target="_blank">
+							<img src={"camera/" + el}/>
 						</a>
-					</figure>;
+						</figure>;
 			} else {
-				return <figure class="image" key={el.name}>
-						<video width="360" height="240" controls>
-							<source src={"http://192.168.0.165/camera/" + el.name} type="video/mp4" />
+				return <figure class="image" key={el}>
+						<video controls>
+							<source src={"camera/" + el} type="video/mp4" />
 						</video>
 						</figure>;
 			}

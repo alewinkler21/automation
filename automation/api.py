@@ -10,15 +10,16 @@ import pytz
 from django.utils import timezone
 from datetime import datetime, timedelta
 import logger
+from os import listdir
 
-from automation.models import Relay, DeviceGroup, PirSensor, LightSensor, Alarm
-from automation.serializers import DeviceGroupSerializer, GPIODeviceSerializer, RelaySerializer, AuthSerializer, AlarmSerializer, RelayActionSerializer
-
+from automation.models import Relay, DeviceGroup, Alarm
+from automation.serializers import DeviceGroupSerializer, RelaySerializer, AuthSerializer, AlarmSerializer, RelayActionSerializer
 from automation.gpio import toggle_gpio
-from automation.pioneer import toggle_pioneer
 
 timeZone = pytz.timezone("America/Montevideo")
 sharedMemory = redis.Redis(host='127.0.0.1', port=6379, db=0)
+mediaPath = "/var/www/html/camera/"
+supportedMedia = ["jpg", "mp4"]
 
 class JSONResponse(HttpResponse):
     def __init__(self, data, **kwargs):
@@ -97,6 +98,14 @@ class ToggleAlarm(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class GetMedia(APIView):
+    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+ 
+    def get(self, format=None):
+        mediaFiles = [f for f in listdir(mediaPath) if f.split(".").pop() in supportedMedia]
+        return JSONResponse(mediaFiles)
 
 class GetAuthToken(APIView):
     authentication_classes = (authentication.BasicAuthentication,)

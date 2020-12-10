@@ -54,10 +54,10 @@ class Buttons extends Component {
   }
   
   render() {
-	  if (!this.state.data) {
-		  return (<div className="column">No data retrieved from server</div>);
+	  if (!this.state.data || this.state.data.length == 0) {
+		return <div className="column">No hay controles configurados</div>;
 	  }	  
-	  return (<ul className="column has-text-centered">  
+	  return <ul className="column has-text-centered">  
 	  {this.state.data.map(el => (
 			  <li key={el.id}>
 	  		  <button className={el.status ? "button is-success" : "button is-black"} key={el.id} onClick={() => this.toggleRelay(el)}>
@@ -65,7 +65,7 @@ class Buttons extends Component {
 	  		  </button>
 	  		  </li>
 	  		  ))}
-	  </ul>);
+	  		</ul>;
   }
 }
 export default Buttons;

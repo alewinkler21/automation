@@ -1,0 +1,23 @@
+#!/bin/bash
+
+scp db_maintenance.py raspberry2:/home/pi/Documents/raspberry
+scp indicator.py raspberry2:/home/pi/Documents/raspberry
+scp light_sensor.py raspberry2:/home/pi/Documents/raspberry
+scp logger.py raspberry2:/home/pi/Documents/raspberry
+scp manage.py raspberry2:/home/pi/Documents/raspberry
+scp notify.py raspberry2:/home/pi/Documents/raspberry
+scp pir_sensor.py raspberry2:/home/pi/Documents/raspberry
+scp test_lights.py raspberry2:/home/pi/Documents/raspberry
+scp test_listen.py raspberry2:/home/pi/Documents/raspberry
+scp test_send.py raspberry2:/home/pi/Documents/raspberry
+
+scp automation/admin.py raspberry2:/home/pi/Documents/raspberry/automation
+scp automation/api.py raspberry2:/home/pi/Documents/raspberry/automation
+scp automation/apps.py raspberry2:/home/pi/Documents/raspberry/automation
+scp automation/models.py raspberry2:/home/pi/Documents/raspberry/automation
+scp automation/serializers.py raspberry2:/home/pi/Documents/raspberry/automation
+scp automation/urls.py raspberry2:/home/pi/Documents/raspberry/automation
+
+scp automation/static/automation/main.js raspberry2:/home/pi/Documents/raspberry/automation/static/automation
+scp -r automation/static/automation/css/ raspberry2:/home/pi/Documents/raspberry/automation/static/automation
+scp -r automation/static/automation/images/ raspberry2:/home/pi/Documents/raspberry/automation/static/automation
