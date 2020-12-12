@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import ReactDOM from "react-dom";
 import DataProvider from "./DataProvider";
 import Buttons from "./Buttons";
-import History from "./History";
 import Camera from "./Camera";
 
 class App extends Component {	
@@ -66,6 +65,32 @@ class App extends Component {
 			});	  
 	}
 
+	recordVideo(){
+		const value = '; ' + document.cookie;
+		const parts = value.split('; ' + 'csrftoken' + '=');
+		
+		if (parts.length == 2) {
+			var csrftoken = parts.pop().split(";").shift();
+		}
+		fetch("recordvideo/", {
+			method: 'POST',
+			headers:{
+				'Content-Type': 'application/json',
+				'X-CSRFToken': csrftoken
+			}
+		}).then(res => {
+			if (res.ok) 
+				return res;
+			else
+				throw new Error(res.status + ' ' + res.statusText);})
+		.catch(error => console.error('Error:', error))
+		.then(response => {
+			if(response) {
+				console.log(response);
+			}
+		});
+  	}
+
 	componentDidMount() {
 		this.fetchData();
 	}
@@ -78,11 +103,6 @@ class App extends Component {
 				endpoint="relays/" 
 				render={data => <Buttons data={data} />} />;
 				break;
-			// case "history":
-			// 	content = <DataProvider
-			// 	endpoint="history/" 
-			// 	render={data => <History data={data} />} />;
-			// 	break;
 			case "camera":
 				content = <DataProvider
 				endpoint="getmedia/" 
@@ -92,10 +112,15 @@ class App extends Component {
 				content = <p><a href="/admin">Configuración</a></p>;
 		}
 		return (
-			<div className="has-text-centered">
+			<div className="column has-text-centered">
+				<nav className="navbar-menu is-active is-mobile">
+					<div className="navbar-start">
+						<button className={this.state.alarmArmed ? "button is-danger" : "button"} href="#" onClick={() => this.toggleAlarm()}>Alarma</button>
+						<button className="button" href="#" onClick={() => this.recordVideo()}>Grabar Video</button>
+					</div>
+				</nav>
 				<nav className="navbar-menu is-active">
 					<div className="navbar-start">
-						<a className={this.state.alarmArmed ? "navbar-item has-background-danger" : "navbar-item"} href="#" onClick={() => this.toggleAlarm()}>Alarma</a>
 						<a className="navbar-item" href="#" onClick={() => this.navigate("controls")}>Controles</a>
 						<a className="navbar-item" href="#" onClick={() => this.navigate("camera")}>Cámara</a>
 						<a className="navbar-item" href="/admin" >Configuración</a>

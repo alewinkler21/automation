@@ -7,7 +7,13 @@ class Camera extends Component {
 	  data: PropTypes.array.isRequired
   };
   state = {
-		  data: this.props.data
+		  data: this.props.data,
+		  popupVisible: false,
+		  popupFile: "",
+		  popupTitle: "",
+		  deleteVisible: false,
+		  deleteIdentifier: "",
+		  deleteDescription: ""
 		  };
   
   componentDidUpdate() {
@@ -18,31 +24,91 @@ class Camera extends Component {
   
   render() {
 	if (!this.state.data || this.state.data.length == 0) {
-		return (<div className="column">No hay archivos multimedia</div>);
+		return (<div className="has-text-centered">No hay archivos multimedia</div>);
 	}
 	// check if data is right for this rendering
 	let sample = this.state.data[0];
-	if (!(typeof sample === 'string' || sample instanceof String)) {
+	if (!sample.fileName) {  
 		return "";
 	}
-	return (<div className="column has-text-centered">  
-				{this.state.data.map(el => {
-						var extension = el.split('.').pop();
-						if (extension == 'jpg'){
-							return <figure className="image is-5by3" key={el}>
-									<a href={"camera/" + el} target="_blank">
-										<img src={"camera/" + el}/>
-									</a>
-									</figure>;
-						} else {
-							return <figure className="image" key={el}>
-									<video controls>
-										<source src={"camera/" + el} type="video/mp4" />
-									</video>
-									</figure>;
-						}
-				})}
-				</div>);
+	let dateFormat = {year: 'numeric', month: 'numeric', day: 'numeric', 
+					  hour: 'numeric', minute: 'numeric', second: 'numeric', 
+					  hour12: false, weekday: 'long'};
+	let popupContent;
+	if (this.state.popupVisible) {
+			popupContent = <div className="modal is-active">
+				<div className="modal-background" />
+				<div className="modal-card">
+				<header className="modal-card-head">
+					<p className="modal-card-title">{this.state.popupTitle}</p>
+					<button className="delete" onClick={() => this.setState({popupVisible: false, popupFile: "", popupTitle: ""})} />
+				</header>
+				<section className="modal-card-body">
+					<div className="content">
+						<video width="720" height="480" controls>
+							<source src={"camera/" + this.state.popupFile} type="video/mp4" />
+						</video>
+					</div>
+				</section>
+				</div>
+			</div>;
+	} else if (this.state.deleteVisible) {
+			popupContent = <div className="modal is-active">
+				<div className="modal-background" />
+				<div className="modal-card">
+				<header className="modal-card-head">
+					<p className="modal-card-title">Eliminar archivos</p>
+					<button className="delete" onClick={() => this.setState({
+						deleteVisible: false, 
+						deleteIdentifier: "", 
+						deleteDescription: ""})} />
+				</header>
+				<section className="modal-card-body">
+					<div className="content">
+						<p>
+							{this.state.deleteDescription}
+						</p>
+					</div>
+				</section>
+				<footer className="modal-card-foot">
+					<button className="button" onClick={() => this.setState({
+						deleteVisible: false, 
+						deleteIdentifier: "", 
+						deleteDescription: ""})} >Cancelar</button>
+					<button className="button is-danger" onClick={() => this.setState({
+						deleteVisible: false, 
+						deleteIdentifier: "", 
+						deleteDescription: ""})}>Borrar</button>
+				</footer>
+				</div>
+			</div>;
+	}
+	return <div>
+			{popupContent}
+			<ul className="has-text-centered">  
+			{this.state.data.map(el => (
+			  <li key={el.id} className="notification">
+				<div className="columns">
+					<div className="column">
+						<a className={el.triggeredByAlarm ? "" : "has-text-info"}
+							href="#" onClick={() => this.setState({
+							popupVisible: true, 
+							popupFile: el.fileName,
+							popupTitle: new Intl.DateTimeFormat("es-ES", dateFormat).format(Date.parse(el.dateCreated))})}>
+						{new Intl.DateTimeFormat("es-ES", dateFormat).format(Date.parse(el.dateCreated))}	
+						</a>
+					</div>
+					<div className="column is-one-fifth has-text-right">
+						<a className="delete is-medium" href="#" onClick={() => this.setState({
+							deleteVisible: true, 
+							deleteIdentifier: el.identifier,
+							deleteDescription: new Intl.DateTimeFormat("es-ES", dateFormat).format(Date.parse(el.dateCreated))})}></a>
+					</div>
+				</div>
+	  		  </li>
+	  		  ))}
+	  		</ul>
+		</div>;
   }
 }
 export default Camera;

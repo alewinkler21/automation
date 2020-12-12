@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from automation.models import GPIODevice, Relay, DeviceGroup, Alarm, RelayAction
+from automation.models import GPIODevice, Relay, DeviceGroup, Alarm, RelayAction,\
+    Media
 from django.contrib.auth.models import User
 
 class DeviceGroupSerializer(serializers.ModelSerializer):
@@ -27,6 +28,11 @@ class AlarmSerializer(serializers.ModelSerializer):
     class Meta:
         model = Alarm
         fields = ('armed', 'fired', 'useCamera')
+        
+class MediaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Media
+        fields = ('id', 'identifier', 'dateCreated', 'fileName', 'type', 'triggeredByAlarm')
 
 class AuthSerializer(serializers.ModelSerializer):
     class Meta:

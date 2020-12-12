@@ -66,3 +66,10 @@ class Alarm(models.Model):
     fired = models.BooleanField(default=False)
     eventDate = models.DateTimeField('event date', auto_now_add=True, null=True, blank=True)
     useCamera = models.BooleanField(default=False)
+    
+class Media(models.Model):
+    identifier = models.CharField(max_length=50)
+    dateCreated = models.DateTimeField('date created', auto_now_add=True)
+    fileName = models.CharField(max_length=50, unique=True)
+    type = models.CharField(max_length=5, null=True)
+    triggeredByAlarm = models.BooleanField(default=False)

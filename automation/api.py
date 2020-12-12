@@ -10,16 +10,21 @@ import pytz
 from django.utils import timezone
 from datetime import datetime, timedelta
 import logger
-from os import listdir
+import threading
+from picamera import PiCamera, PiCameraMMALError
+import time
+import subprocess
+import os
+import sys
 
-from automation.models import Relay, DeviceGroup, Alarm
-from automation.serializers import DeviceGroupSerializer, RelaySerializer, AuthSerializer, AlarmSerializer, RelayActionSerializer
+from automation.models import Relay, DeviceGroup, Alarm, Media
+from automation.serializers import DeviceGroupSerializer, RelaySerializer, AuthSerializer, AlarmSerializer,\
+    RelayActionSerializer, MediaSerializer
 from automation.gpio import toggle_gpio
 
 timeZone = pytz.timezone("America/Montevideo")
 sharedMemory = redis.Redis(host='127.0.0.1', port=6379, db=0)
 mediaPath = "/var/www/html/camera/"
-supportedMedia = ["jpg", "mp4"]
 
 class JSONResponse(HttpResponse):
     def __init__(self, data, **kwargs):
@@ -104,8 +109,9 @@ class GetMedia(APIView):
     permission_classes = (permissions.IsAuthenticated,)
  
     def get(self, format=None):
-        mediaFiles = [f for f in listdir(mediaPath) if f.split(".").pop() in supportedMedia]
-        return JSONResponse(mediaFiles)
+        media = Media.objects.filter(type='video').order_by('-dateCreated')
+        serializer = MediaSerializer(media, many=True)
+        return JSONResponse(serializer.data)
 
 class GetAuthToken(APIView):
     authentication_classes = (authentication.BasicAuthentication,)
@@ -114,3 +120,49 @@ class GetAuthToken(APIView):
     def get(self, request, format=None):
         serializer = AuthSerializer(request.user, many=False)
         return JSONResponse(serializer.data)
+    
+class RecordVideo(APIView):
+    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication)
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def saveMedia(self, identifier, dateCreated, fileName, mediaType):
+        media = Media()
+        media.identifier = identifier
+        media.dateCreated = dateCreated
+        media.fileName = fileName
+        media.type = mediaType
+        media.triggeredByAlarm = False
+        media.save() 
+        
+    def recordVideo(self):
+        dateCreated = datetime.now(tz=timeZone)
+        identifier = dateCreated.strftime("%Y_%m_%d_%H_%M_%S")
+        with PiCamera() as camera:
+            try:
+                # photos
+                for i in range(3):
+                    fileName = "{}-{}.jpg".format(identifier, i)
+                    logger.debug("Take picture {}".format(fileName))
+                    camera.capture("{}{}".format(mediaPath, fileName))
+                    self.saveMedia(identifier, dateCreated, fileName, "image")
+                    time.sleep(1)
+                # video
+                logger.debug("Start recording video")
+                fileNameH264 = "{}.h264".format(identifier)
+                fileNameMP4 = "{}.mp4".format(identifier)
+                camera.start_recording("{}{}".format(mediaPath, fileNameH264))
+                camera.wait_recording(15)
+                camera.stop_recording()
+                logger.debug("Stop recording video and release camera")
+                subprocess.run(["MP4Box", "-add", "{}{}".format(mediaPath, fileNameH264), "{}{}".format(mediaPath, fileNameMP4)], stdout=subprocess.DEVNULL)
+                self.saveMedia(identifier, dateCreated, fileNameMP4, "video")
+                os.remove("{}{}".format(mediaPath, fileNameH264))
+            except PiCameraMMALError as error:
+                logger.error(error)
+            except:
+                print("Unexpected error:", sys.exc_info()[0])
+
+    def post(self, request, format=None):
+        th = threading.Thread(target=self.recordVideo)
+        th.start()
+        return Response("OK", status=status.HTTP_200_OK)

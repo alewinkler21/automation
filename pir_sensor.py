@@ -12,7 +12,7 @@ from dateutil.parser import parse as parseDate
 from threading import Thread
 import logger as logger
 import redis
-from picamera import PiCamera
+from picamera import PiCamera, PiCameraMMALError
 import signal
 import subprocess
 # from notify import notify
@@ -20,7 +20,7 @@ import subprocess
 # setup django in order to use models
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "raspberry.settings")
 django.setup()
-from automation.models import LightState, Relay, RelayAction, PirSensor, Alarm
+from automation.models import LightState, Relay, RelayAction, PirSensor, Alarm, Media
 
 pirSensors = []
 timeZone = pytz.timezone("America/Montevideo")
@@ -124,24 +124,43 @@ class PIRSensorMonitor(Thread):
         logger.debug("Alarm triggered")
         alarm.fired = True
         alarm.save()
+        # notify
+        # TODO: do something to notify
         if alarm.useCamera:
-            camera = PiCamera()
-            fileName = datetime.now(tz=timeZone).strftime("%Y_%m_%d_%H_%M_%S")
-            # photos
-            for i in range(3):
-                logger.debug("Take picture {}".format(i))
-                camera.capture("{}{}-{}.jpg".format(mediaPath, fileName, i))
-                time.sleep(1)
-            # video
-            logger.debug("Start recording video")
-            camera.start_recording("{}{}.h264".format(mediaPath, fileName))
-            time.sleep(30)
-            camera.stop_recording()
-            logger.debug("Stop recording video")
-            camera.close()
-            logger.debug("Release camera")
-            subprocess.run(["MP4Box", "-add", "{}{}.h264".format(mediaPath, fileName), "{}{}.mp4".format(mediaPath, fileName)], stdout=subprocess.DEVNULL)
-            os.remove("{}{}.h264".format(mediaPath, fileName))
+            def saveMedia(identifier, dateCreated, fileName, mediaType):
+                media = Media()
+                media.identifier = identifier
+                media.dateCreated = dateCreated
+                media.fileName = fileName
+                media.type = mediaType
+                media.triggeredByAlarm = True
+                media.save()
+            dateCreated = datetime.now(tz=timeZone)
+            identifier = dateCreated.strftime("%Y_%m_%d_%H_%M_%S")
+            with PiCamera() as camera:
+                try:
+                    # photos
+                    for i in range(3):
+                        fileName = "{}-{}.jpg".format(identifier, i)
+                        logger.debug("Take picture {}".format(fileName))
+                        camera.capture("{}{}".format(mediaPath, fileName))
+                        saveMedia(identifier, dateCreated, fileName, "image")
+                        time.sleep(1)
+                    # video
+                    logger.debug("Start recording video")
+                    fileNameH264 = "{}.h264".format(identifier)
+                    fileNameMP4 = "{}.mp4".format(identifier)
+                    camera.start_recording("{}{}".format(mediaPath, fileNameH264))
+                    camera.wait_recording(60)
+                    camera.stop_recording()
+                    logger.debug("Stop recording video and release camera")
+                    subprocess.run(["MP4Box", "-add", "{}{}".format(mediaPath, fileNameH264), "{}{}".format(mediaPath, fileNameMP4)], stdout=subprocess.DEVNULL)
+                    saveMedia(identifier, dateCreated, fileNameMP4, "video")
+                    os.remove("{}{}".format(mediaPath, fileNameH264))
+                except PiCameraMMALError as error:
+                    logger.error(error)
+                except:
+                    print("Unexpected error:", sys.exc_info()[0])
 
     def run(self):
         global timeZone

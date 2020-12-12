@@ -21,3 +21,5 @@ scp automation/urls.py raspberry2:/home/pi/Documents/raspberry/automation
 scp automation/static/automation/main.js raspberry2:/home/pi/Documents/raspberry/automation/static/automation
 scp -r automation/static/automation/css/ raspberry2:/home/pi/Documents/raspberry/automation/static/automation
 scp -r automation/static/automation/images/ raspberry2:/home/pi/Documents/raspberry/automation/static/automation
+
+scp automation/templates/automation/index.html raspberry2:/home/pi/Documents/raspberry/automation/templates/automation

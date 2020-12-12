@@ -1,2 +1,6 @@
 
 @import "bulma-0.8.0/bulma";
+
+.notification:not(:last-child) {
+	margin-bottom: 0.2rem;
+}

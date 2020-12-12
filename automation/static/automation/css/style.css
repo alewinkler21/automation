@@ -9340,4 +9340,8 @@ label.panel-block:hover {
   padding: 3rem 1.5rem 6rem;
 }
 
+.notification:not(:last-child) {
+  margin-bottom: 0.2rem;
+}
+
 /*# sourceMappingURL=style.css.map */
