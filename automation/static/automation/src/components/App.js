@@ -115,15 +115,31 @@ class App extends Component {
 			<div className="column has-text-centered">
 				<nav className="navbar-menu is-active is-mobile">
 					<div className="navbar-start">
-						<button className={this.state.alarmArmed ? "button is-danger" : "button"} href="#" onClick={() => this.toggleAlarm()}>Alarma</button>
-						<button className="button" href="#" onClick={() => this.recordVideo()}>Grabar Video</button>
-					</div>
-				</nav>
-				<nav className="navbar-menu is-active">
-					<div className="navbar-start">
-						<a className="navbar-item" href="#" onClick={() => this.navigate("controls")}>Controles</a>
-						<a className="navbar-item" href="#" onClick={() => this.navigate("camera")}>Cámara</a>
-						<a className="navbar-item" href="/admin" >Configuración</a>
+						<button className={this.state.alarmArmed ? "button is-danger" : "button"} href="#" onClick={() => this.toggleAlarm()}>
+							<span className="icon is-medium"> 
+								<i className="fas fa-lg fa-volume-up"></i> 
+							</span> 
+						</button>
+						<button className="button" href="#" onClick={() => this.recordVideo()}>
+							<span className="icon is-medium"> 
+								<i className="fas fa-lg fa-video"></i> 
+							</span> 
+						</button>
+						<button className="button" href="#" onClick={() => this.navigate("controls")}>
+							<span className="icon is-medium"> 
+								<i className="fas fa-lg fa-lightbulb"></i>
+							</span> 
+						</button>
+						<button className="button" href="#" onClick={() => this.navigate("camera")}>
+							<span className="icon is-medium"> 
+								<i className="fas fa-lg fa-file-video"></i>
+							</span> 
+						</button>
+						<button className="button" href="#" onClick={() => window.location.href = "/admin"}>
+							<span className="icon is-medium"> 
+								<i className="fas fa-lg fa-cog"></i>
+							</span> 
+						</button>
 					</div>
 				</nav>
 				{content}

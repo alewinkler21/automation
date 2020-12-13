@@ -11,7 +11,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 import logger
 import threading
-from picamera import PiCamera, PiCameraMMALError
+# from picamera import PiCamera, PiCameraMMALError
 import time
 import subprocess
 import os
@@ -137,30 +137,30 @@ class RecordVideo(APIView):
     def recordVideo(self):
         dateCreated = datetime.now(tz=timeZone)
         identifier = dateCreated.strftime("%Y_%m_%d_%H_%M_%S")
-        with PiCamera() as camera:
-            try:
-                # photos
-                for i in range(3):
-                    fileName = "{}-{}.jpg".format(identifier, i)
-                    logger.debug("Take picture {}".format(fileName))
-                    camera.capture("{}{}".format(mediaPath, fileName))
-                    self.saveMedia(identifier, dateCreated, fileName, "image")
-                    time.sleep(1)
-                # video
-                logger.debug("Start recording video")
-                fileNameH264 = "{}.h264".format(identifier)
-                fileNameMP4 = "{}.mp4".format(identifier)
-                camera.start_recording("{}{}".format(mediaPath, fileNameH264))
-                camera.wait_recording(15)
-                camera.stop_recording()
-                logger.debug("Stop recording video and release camera")
-                subprocess.run(["MP4Box", "-add", "{}{}".format(mediaPath, fileNameH264), "{}{}".format(mediaPath, fileNameMP4)], stdout=subprocess.DEVNULL)
-                self.saveMedia(identifier, dateCreated, fileNameMP4, "video")
-                os.remove("{}{}".format(mediaPath, fileNameH264))
-            except PiCameraMMALError as error:
-                logger.error(error)
-            except:
-                print("Unexpected error:", sys.exc_info()[0])
+#         with PiCamera() as camera:
+#             try:
+#                 # photos
+#                 for i in range(3):
+#                     fileName = "{}-{}.jpg".format(identifier, i)
+#                     logger.debug("Take picture {}".format(fileName))
+#                     camera.capture("{}{}".format(mediaPath, fileName))
+#                     self.saveMedia(identifier, dateCreated, fileName, "image")
+#                     time.sleep(1)
+#                 # video
+#                 logger.debug("Start recording video")
+#                 fileNameH264 = "{}.h264".format(identifier)
+#                 fileNameMP4 = "{}.mp4".format(identifier)
+#                 camera.start_recording("{}{}".format(mediaPath, fileNameH264))
+#                 camera.wait_recording(15)
+#                 camera.stop_recording()
+#                 logger.debug("Stop recording video and release camera")
+#                 subprocess.run(["MP4Box", "-add", "{}{}".format(mediaPath, fileNameH264), "{}{}".format(mediaPath, fileNameMP4)], stdout=subprocess.DEVNULL)
+#                 self.saveMedia(identifier, dateCreated, fileNameMP4, "video")
+#                 os.remove("{}{}".format(mediaPath, fileNameH264))
+#             except PiCameraMMALError as error:
+#                 logger.error(error)
+#             except:
+#                 print("Unexpected error:", sys.exc_info()[0])
 
     def post(self, request, format=None):
         th = threading.Thread(target=self.recordVideo)
