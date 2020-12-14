@@ -6,23 +6,51 @@
 <title>User Login</title> 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="shortcut icon" type="image/png" href="{% static "automation/images/favicon.ico" %}"/>
+  <link rel="shortcut icon" type="image/png" href="{% static "automation/images/favicon.ico" %}" />
   <link rel="stylesheet" type="text/css" href="{% static 'automation/css/style.css' %}" />
+  <script src="{% static "automation/all.js" %}"></script>
 </head>
 <body>
-
-<div id="login_header">
-	<h1>User Login</h1>
-	{% if form.errors %}
-	<p>Your username and password didn't match! Please try again!</p>
-	{% endif %}
-	<form id="login_form" method="post" action=".">
-		{% csrf_token %}
-		<p><label for="id_username">Username</label>{{ form.username }}</p>
-		<p><label for="id_password">Password</label>{{ form.password }}</p>
-		<input type="hidden" name="next" value="/" />
-		<input type="submit" value=Login />
-	</form>	
-</div>
+	<section class="section">
+		<div class="container">
+			<div class="columns is-centered">
+				<div class="column is-5-tablet is-4-desktop is-3-widescreen">
+					{% if form.errors %}
+					<p>Your username and password didn't match! Please try again!</p>
+					{% endif %}
+					<form id="login_form" method="post" action="." class="box">
+						{% csrf_token %}
+						<div class="field">
+							<label class="label">Usuario</label>
+							<div class="control has-icons-left has-icons-right">
+								<!-- {{ form.username }} -->
+								<input type="text" name="username" autofocus="" required="" id="id_username" class="input" placeholder="ej. juanperez">
+								<span class="icon is-small is-left">
+								<i class="fas fa-user"></i>
+								</span>
+								<span class="icon is-small is-right">
+								<i class="fas fa-check"></i>
+								</span>
+							</div>
+						</div>
+						<div class="field">
+							<label class="label" for="id_password">Contraseña</label>
+							<div class="control has-icons-left has-icons-right">
+								<input type="password" name="password" required="" id="id_password" class="input" placeholder="*******">
+								<span class="icon is-small is-left">
+								<i class="fas fa-user"></i>
+								</span>
+								<span class="icon is-small is-right">
+								<i class="fas fa-check"></i>
+								</span>
+							</div>
+						</div>
+						<input type="hidden" name="next" value="/" />
+						<input type="submit" value="Ingresar" class="button is-primary" />
+					</form>	
+				</div>
+			</div>
+		</div>
+	</section>
 </body>
 </html>

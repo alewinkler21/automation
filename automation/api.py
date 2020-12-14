@@ -11,11 +11,11 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 import logger
 import threading
-# from picamera import PiCamera, PiCameraMMALError
-import time
+from picamera import PiCamera, PiCameraMMALError
 import subprocess
 import os
 import sys
+import uuid
 
 from automation.models import Relay, DeviceGroup, Alarm, Media
 from automation.serializers import DeviceGroupSerializer, RelaySerializer, AuthSerializer, AlarmSerializer,\
@@ -25,6 +25,7 @@ from automation.gpio import toggle_gpio
 timeZone = pytz.timezone("America/Montevideo")
 sharedMemory = redis.Redis(host='127.0.0.1', port=6379, db=0)
 mediaPath = "/var/www/html/camera/"
+semaphore = threading.Semaphore()
 
 class JSONResponse(HttpResponse):
     def __init__(self, data, **kwargs):
@@ -134,35 +135,41 @@ class RecordVideo(APIView):
         media.triggeredByAlarm = False
         media.save() 
         
-    def recordVideo(self):
+    def recordVideo(self, identifier):
         dateCreated = datetime.now(tz=timeZone)
-        identifier = dateCreated.strftime("%Y_%m_%d_%H_%M_%S")
-#         with PiCamera() as camera:
-#             try:
-#                 # photos
-#                 for i in range(3):
-#                     fileName = "{}-{}.jpg".format(identifier, i)
-#                     logger.debug("Take picture {}".format(fileName))
-#                     camera.capture("{}{}".format(mediaPath, fileName))
-#                     self.saveMedia(identifier, dateCreated, fileName, "image")
-#                     time.sleep(1)
-#                 # video
-#                 logger.debug("Start recording video")
-#                 fileNameH264 = "{}.h264".format(identifier)
-#                 fileNameMP4 = "{}.mp4".format(identifier)
-#                 camera.start_recording("{}{}".format(mediaPath, fileNameH264))
-#                 camera.wait_recording(15)
-#                 camera.stop_recording()
-#                 logger.debug("Stop recording video and release camera")
-#                 subprocess.run(["MP4Box", "-add", "{}{}".format(mediaPath, fileNameH264), "{}{}".format(mediaPath, fileNameMP4)], stdout=subprocess.DEVNULL)
-#                 self.saveMedia(identifier, dateCreated, fileNameMP4, "video")
-#                 os.remove("{}{}".format(mediaPath, fileNameH264))
-#             except PiCameraMMALError as error:
-#                 logger.error(error)
-#             except:
-#                 print("Unexpected error:", sys.exc_info()[0])
+        with PiCamera() as camera:
+            try:
+                # video
+                logger.debug("Start recording video")
+                fileNameH264 = "{}.h264".format(identifier)
+                fileNameMP4 = "{}.mp4".format(identifier)
+                camera.start_recording("{}{}".format(mediaPath, fileNameH264))
+                camera.wait_recording(15)
+                camera.stop_recording()
+                logger.debug("Stop recording video and release camera")
+                subprocess.run(["MP4Box", "-add", "{}{}".format(mediaPath, fileNameH264), "{}{}".format(mediaPath, fileNameMP4)], stdout=subprocess.DEVNULL)
+                self.saveMedia(identifier, dateCreated, fileNameMP4, "video")
+                os.remove("{}{}".format(mediaPath, fileNameH264))
+            except PiCameraMMALError as error:
+                logger.error(error)
+            except:
+                print("Unexpected error:", sys.exc_info()[0])
+        sharedMemory.delete("recording")
 
     def post(self, request, format=None):
-        th = threading.Thread(target=self.recordVideo)
-        th.start()
-        return Response("OK", status=status.HTTP_200_OK)
+        semaphore.acquire()
+        identifier = sharedMemory.get("recording")
+        if not identifier:
+            newIdentifier = uuid.uuid1().hex
+            sharedMemory.set("recording", newIdentifier)
+        semaphore.release()
+        response = {}
+        if identifier:
+            response['status'] = "ERROR"
+            response['message'] = "La grabación anterior aún está en curso"
+        else:
+            th = threading.Thread(target=self.recordVideo, args=[newIdentifier])
+            th.start()
+            response['status'] = "OK"
+            response['message'] = "Grabación iniciada"
+        return JSONResponse(response)

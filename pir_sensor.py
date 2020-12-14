@@ -15,6 +15,7 @@ import redis
 from picamera import PiCamera, PiCameraMMALError
 import signal
 import subprocess
+import uuid
 # from notify import notify
 
 # setup django in order to use models
@@ -136,16 +137,9 @@ class PIRSensorMonitor(Thread):
                 media.triggeredByAlarm = True
                 media.save()
             dateCreated = datetime.now(tz=timeZone)
-            identifier = dateCreated.strftime("%Y_%m_%d_%H_%M_%S")
+            identifier = uuid.uuid1().hex
             with PiCamera() as camera:
                 try:
-                    # photos
-                    for i in range(3):
-                        fileName = "{}-{}.jpg".format(identifier, i)
-                        logger.debug("Take picture {}".format(fileName))
-                        camera.capture("{}{}".format(mediaPath, fileName))
-                        saveMedia(identifier, dateCreated, fileName, "image")
-                        time.sleep(1)
                     # video
                     logger.debug("Start recording video")
                     fileNameH264 = "{}.h264".format(identifier)

@@ -4,3 +4,19 @@
 .notification:not(:last-child) {
 	margin-bottom: 0.2rem;
 }
+
+body {
+	height: 100vh;
+}
+
+.modal-card-foot {
+	justify-content: flex-end;
+}
+
+.modal-card-title {
+	font-size: 1.0rem;
+}
+
+.modal-card-body {
+	padding: 0;
+}

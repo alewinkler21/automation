@@ -80,13 +80,13 @@ class App extends Component {
 			}
 		}).then(res => {
 			if (res.ok) 
-				return res;
+				return res.json();
 			else
 				throw new Error(res.status + ' ' + res.statusText);})
 		.catch(error => console.error('Error:', error))
 		.then(response => {
 			if(response) {
-				console.log(response);
+				alert(response.message);
 			}
 		});
   	}
@@ -115,29 +115,29 @@ class App extends Component {
 			<div className="column has-text-centered">
 				<nav className="navbar-menu is-active is-mobile">
 					<div className="navbar-start">
-						<button className={this.state.alarmArmed ? "button is-danger" : "button"} href="#" onClick={() => this.toggleAlarm()}>
-							<span className="icon is-medium"> 
-								<i className="fas fa-lg fa-volume-up"></i> 
-							</span> 
-						</button>
-						<button className="button" href="#" onClick={() => this.recordVideo()}>
-							<span className="icon is-medium"> 
-								<i className="fas fa-lg fa-video"></i> 
-							</span> 
-						</button>
-						<button className="button" href="#" onClick={() => this.navigate("controls")}>
+						<button className="button is-large" href="#" onClick={() => this.navigate("controls")}>
 							<span className="icon is-medium"> 
 								<i className="fas fa-lg fa-lightbulb"></i>
 							</span> 
 						</button>
-						<button className="button" href="#" onClick={() => this.navigate("camera")}>
+						<button className="button is-large" href="#" onClick={() => this.navigate("camera")}>
 							<span className="icon is-medium"> 
 								<i className="fas fa-lg fa-file-video"></i>
 							</span> 
 						</button>
-						<button className="button" href="#" onClick={() => window.location.href = "/admin"}>
+						<button className="button is-large" href="#" onClick={() => window.location.href = "/admin"}>
 							<span className="icon is-medium"> 
 								<i className="fas fa-lg fa-cog"></i>
+							</span> 
+						</button>
+						<button className={this.state.alarmArmed ? "button is-large is-danger" : "button is-large"} href="#" onClick={() => this.toggleAlarm()}>
+							<span className="icon is-medium"> 
+								<i className="fas fa-lg fa-volume-up"></i> 
+							</span> 
+						</button>
+						<button className="button is-large" href="#" onClick={() => this.recordVideo()}>
+							<span className="icon is-medium"> 
+								<i className="fas fa-lg fa-video"></i> 
 							</span> 
 						</button>
 					</div>

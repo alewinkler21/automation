@@ -23,4 +23,5 @@ scp automation/static/automation/main.js raspberry2:/home/pi/Documents/raspberry
 scp -r automation/static/automation/css/ raspberry2:/home/pi/Documents/raspberry/automation/static/automation
 scp -r automation/static/automation/images/ raspberry2:/home/pi/Documents/raspberry/automation/static/automation
 
+scp automation/templates/registration/login.html raspberry2:/home/pi/Documents/raspberry/automation/templates/registration
 scp automation/templates/automation/index.html raspberry2:/home/pi/Documents/raspberry/automation/templates/automation

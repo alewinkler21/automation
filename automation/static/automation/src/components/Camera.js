@@ -88,7 +88,7 @@ class Camera extends Component {
 			<ul className="has-text-centered">  
 			{this.state.data.map(el => (
 			  <li key={el.id} className="notification">
-				<div className="columns">
+				<div className="columns is-mobile">
 					<div className="column">
 						<a className={el.triggeredByAlarm ? "" : "has-text-info"}
 							href="#" onClick={() => this.setState({
@@ -98,7 +98,7 @@ class Camera extends Component {
 						{new Intl.DateTimeFormat("es-ES", dateFormat).format(Date.parse(el.dateCreated))}	
 						</a>
 					</div>
-					<div className="column is-one-fifth has-text-right">
+					<div className="column is-1">
 						<a className="delete is-medium" href="#" onClick={() => this.setState({
 							deleteVisible: true, 
 							deleteIdentifier: el.identifier,
