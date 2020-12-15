@@ -27,12 +27,12 @@ class RelayActionSerializer(serializers.ModelSerializer):
 class AlarmSerializer(serializers.ModelSerializer):
     class Meta:
         model = Alarm
-        fields = ('armed', 'fired', 'useCamera')
+        fields = ('armed', 'fired', 'useCamera', 'detectPeople')
         
 class MediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Media
-        fields = ('id', 'identifier', 'dateCreated', 'fileName', 'type', 'triggeredByAlarm')
+        fields = ('id', 'identifier', 'dateCreated', 'fileName', 'type', 'triggeredByAlarm', 'peopleDetected')
 
 class AuthSerializer(serializers.ModelSerializer):
     class Meta:

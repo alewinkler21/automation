@@ -6,6 +6,9 @@ log = logging.getLogger("AUTOMATION")
 def debug(message):
     log.debug(message)
 
+def info(message):
+    log.info(message)
+    
 def warning(message):
     log.warning(message)
 

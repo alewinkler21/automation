@@ -23,7 +23,7 @@ class App extends Component {
 	toggleAlarm() {
 		var url = 'togglealarm/';
 		
-		var data = {armed: !this.state.alarmArmed, useCamera: true};
+		var data = {armed: !this.state.alarmArmed, useCamera: true, fired: false, detectPeople: true};
 
 		const value = '; ' + document.cookie;
 		const parts = value.split('; ' + 'csrftoken' + '=');

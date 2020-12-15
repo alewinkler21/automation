@@ -173,3 +173,16 @@ class RecordVideo(APIView):
             response['status'] = "OK"
             response['message'] = "Grabación iniciada"
         return JSONResponse(response)
+    
+class DeleteMedia(APIView):
+    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication)
+    permission_classes = (permissions.IsAuthenticated,)
+ 
+    def deleteMedia(self, media):
+        media.delete()
+        os.remove("{}{}".format(mediaPath, media.fileName))
+
+    def post(self, request, format=None):
+        identifier = request.data
+        [self.deleteMedia(media) for media in Media.objects.filter(identifier=identifier)]
+        return Response(identifier, status=status.HTTP_200_OK)
