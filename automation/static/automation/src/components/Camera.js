@@ -17,9 +17,11 @@ class Camera extends Component {
 			};
 
 	componentDidUpdate() {
-		if (this.state.data.length == 0) {
+		console.log("component updated");
+		if (this.state.data !== this.props.data) {
+			console.log("data changed");
 			this.setState({data: this.props.data});
-		}
+		} 
 	}
   
 	deleteMedia(identifier) {
@@ -53,6 +55,7 @@ class Camera extends Component {
 	}
 
 	render() {
+		console.log("component render");
 		if (!this.state.data || this.state.data.length == 0) {
 			return (<div className="has-text-centered">No hay archivos multimedia</div>);
 		}
