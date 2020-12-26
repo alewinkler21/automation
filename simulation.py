@@ -32,13 +32,17 @@ def saveDeviceAction(device, status, tmstmp):
     device.save()
 
 def main():
+    GPIO.setwarnings(False)
+    GPIO.setmode(GPIO.BCM)
     while True:
         devices = Relay.objects.filter(enabled=True, autoEnabled=True, address='127.0.0.1', status=False)
         now = datetime.now(tz=timeZone)
+        logger.debug("Checking simulation devices. Count devices: {}".format(len(devices)))
         for d in devices:
             longTimeStart = timeZone.localize(datetime.combine(now, d.longTimeStart))
             longTimeEnd = timeZone.localize(datetime.combine(now, d.longTimeEnd)) if d.longTimeEnd > d.longTimeStart else timeZone.localize(datetime.combine(now + timedelta(days=1), d.longTimeEnd))
             if now >= longTimeStart and now < longTimeEnd:
+                logger.info("Simulation turning on lights")
                 turnOffDatetime = longTimeEnd
                 # turn on device
                 GPIO.setup(d.pinNumber, GPIO.OUT)
@@ -53,7 +57,7 @@ def main():
                                                                                                                           turnOffDatetime.strftime("%Y-%m-%d %H:%M:%S")))
                 else:
                     logger.error("Set automatic turn off failed for device {}".format(d.name))
-    time.sleep(30)
+        time.sleep(30)
 
 def terminateProcess(signalNumber, frame):
     print ('(SIGTERM) terminating the process')
