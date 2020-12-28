@@ -104,9 +104,7 @@ class App extends Component {
 				render={data => <Buttons data={data} />} />;
 				break;
 			case "camera":
-				content = <DataProvider
-				endpoint="getmedia/" 
-				render={data => <Camera data={data} />} />;
+				content = <Camera />;
 				break;
 			default:
 				content = <p><a href="/admin">Configuración</a></p>;

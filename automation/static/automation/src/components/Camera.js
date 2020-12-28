@@ -3,28 +3,44 @@ import PropTypes from "prop-types";
 import key from "weak-key";
 
 class Camera extends Component {
-  static propTypes = {
-	  data: PropTypes.array.isRequired
-  };
 	state = {
-			data: this.props.data,
+			data: [],
 			popupVisible: false,
 			popupFile: "",
 			popupTitle: "",
 			deleteVisible: false,
 			deleteIdentifier: "",
-			deleteDescription: ""
-			};
+			deleteDescription: "",
+			fetching: false,
+			delay: 5000};
 
-	componentDidUpdate() {
-		console.log("component updated");
-		if (this.state.data !== this.props.data) {
-			console.log("data changed");
-			this.setState({data: this.props.data});
-		} 
+	componentDidMount() {
+		this.fetchData();
+		this.interval = setInterval(this.fetchData, this.state.delay);
 	}
-  
-	deleteMedia(identifier) {
+		
+	componentWillUnmount() {
+		clearInterval(this.interval);
+	}
+	
+	fetchData = () => {
+		if (this.state.fetching) {
+			console.log('already fetching data');
+			return;
+		}
+		this.setState({fetching: true});
+		fetch('getmedia/').then(res => {
+			if (res.ok) 
+				return res.json();
+			else
+				throw new Error(res.status + ' ' + res.statusText);})
+		.catch(error => console.error('Error:', error))
+		.then(response => {
+			this.setState({data: response, fetching: false});
+			});
+	}
+
+	deleteMedia = (identifier) => {
 		var url = 'deletemedia/';
 		
 		const value = '; ' + document.cookie;
@@ -49,20 +65,19 @@ class Camera extends Component {
 		.catch(error => console.error('Error:', error))
 		.then(response => {
 			if(response) {
-				// do nothing
+				let filterDeletedElement = this.state.data.filter(el => el.identifier != this.state.deleteIdentifier);
+				this.setState({
+					deleteVisible: false, 
+					deleteIdentifier: "", 
+					deleteDescription: "",
+					data: filterDeletedElement});
 			}
-		});
+		});	
 	}
 
 	render() {
-		console.log("component render");
 		if (!this.state.data || this.state.data.length == 0) {
 			return (<div className="has-text-centered">No hay archivos multimedia</div>);
-		}
-		// check if data is right for this rendering
-		let sample = this.state.data[0];
-		if (!sample.fileName) {  
-			return "";
 		}
 		let dateFormat = {year: 'numeric', month: 'numeric', day: 'numeric', 
 							hour: 'numeric', minute: 'numeric', second: 'numeric', 
@@ -108,15 +123,7 @@ class Camera extends Component {
 						deleteVisible: false, 
 						deleteIdentifier: "", 
 						deleteDescription: ""})} >Cancelar</button>
-					<button className="button is-danger" onClick={() => {
-						this.deleteMedia(this.state.deleteIdentifier);
-						let withoutTheElement = this.state.data.filter(el => el.identifier != this.state.deleteIdentifier);
-						this.setState({
-							deleteVisible: false, 
-							deleteIdentifier: "", 
-							deleteDescription: "",
-							data: withoutTheElement});
-					}}>Borrar</button>
+					<button className="button is-danger" onClick={() => this.deleteMedia(this.state.deleteIdentifier)}>Borrar</button>
 				</footer>
 				</div>
 			</div>;
