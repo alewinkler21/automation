@@ -153,7 +153,7 @@ class RecordVideo(APIView):
             except PiCameraMMALError as error:
                 logger.error(error)
             except:
-                print("Unexpected error:", sys.exc_info()[0])
+                logger.error("Unexpected error:{}".format(sys.exc_info()[0]))
         sharedMemory.delete("recording")
 
     def post(self, request, format=None):
