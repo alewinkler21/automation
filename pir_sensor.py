@@ -16,7 +16,8 @@ from picamera import PiCamera, PiCameraMMALError
 import signal
 import subprocess
 import uuid
-import cv2 
+import cv2
+import notify
 # from notify import notify
 
 # setup django in order to use models
@@ -122,6 +123,7 @@ class VideoAnalysis(Thread):
                             cv2.imwrite("{}{}{}".format(mediaPath, MP4file, ".jpg"), frame)
                             logger.info("People detected in {}".format(MP4file))
                             [self.setPeopleDetected(media) for media in Media.objects.filter(fileName=MP4file)]
+                            notify.defaultClient().sendSMS("59899694853", "Alarma disparada. https://raspberry2.servepics.com/")
                             break
                     else:
                         break
@@ -172,11 +174,8 @@ class PIRSensorMonitor(Thread):
         logger.info("Alarm triggered")
         alarm.fired = True
         alarm.save()
-        # notify
-        # TODO: do something to notify
         if not alarm.useCamera:
-            logger.debug("Send alarm notification")
-            # TODO: do something to notify
+            notify.defaultClient().sendSMS("59899694853", "Alarma disparada")
         else:
             def saveMedia(identifier, dateCreated, fileName, mediaType):
                 media = Media()
