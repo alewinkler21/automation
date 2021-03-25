@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 import ReactDOM from "react-dom";
 import DataProvider from "./DataProvider";
-import Buttons from "./Buttons";
+import Actions from "./Actions";
 import Camera from "./Camera";
 
 class App extends Component {	
@@ -53,7 +53,7 @@ class App extends Component {
 	}
 
 	fetchData(){
-		fetch("getalarm/").then(res => {
+		fetch("alarm/").then(res => {
 			if (res.ok) 
 				return res.json();
 			else
@@ -100,8 +100,8 @@ class App extends Component {
 		switch(this.state.screen) {
 			case "controls":
 				content = <DataProvider
-				endpoint="relays/" 
-				render={data => <Buttons data={data} />} />;
+				endpoint="actions/" 
+				render={data => <Actions data={data} />} />;
 				break;
 			case "camera":
 				content = <Camera />;
@@ -113,31 +113,31 @@ class App extends Component {
 			<div className="column has-text-centered">
 				<nav className="navbar-menu is-active is-mobile">
 					<div className="navbar-start">
-						<button className="button is-large" href="#" onClick={() => this.navigate("controls")}>
+						<button className="button is-large is-dark" href="#" onClick={() => this.navigate("controls")}>
 							<span className="icon is-medium"> 
 								<i className="fas fa-lg fa-lightbulb"></i>
 							</span> 
 						</button>
-						<button className="button is-large" href="#" onClick={() => this.navigate("camera")}>
+						<button className="button is-large is-dark" href="#" onClick={() => this.navigate("camera")}>
 							<span className="icon is-medium"> 
 								<i className="fas fa-lg fa-file-video"></i>
 							</span> 
 						</button>
-						<button className="button is-large" href="#" onClick={() => window.location.href = "/admin"}>
-							<span className="icon is-medium"> 
-								<i className="fas fa-lg fa-cog"></i>
-							</span> 
-						</button>
-						<button className={this.state.alarmArmed ? "button is-large is-danger" : "button is-large"} href="#" onClick={() => this.toggleAlarm()}>
+						<button className={this.state.alarmArmed ? "button is-large is-danger" : "button is-large is-dark"} href="#" onClick={() => this.toggleAlarm()}>
 							<span className="icon is-medium"> 
 								<i className="fas fa-lg fa-volume-up"></i> 
 							</span> 
 						</button>
-						<button className="button is-large" href="#" onClick={() => this.recordVideo()}>
+						<button className="button is-large is-dark" href="#" onClick={() => this.recordVideo()}>
 							<span className="icon is-medium"> 
 								<i className="fas fa-lg fa-video"></i> 
 							</span> 
 						</button>
+						<button className="button is-large is-dark" href="#" onClick={() => window.location.href = "/admin"}>
+						<span className="icon is-medium"> 
+							<i className="fas fa-lg fa-cog"></i>
+						</span> 
+					</button>
 					</div>
 				</nav>
 				{content}

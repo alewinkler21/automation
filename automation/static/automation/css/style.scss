@@ -1,4 +1,12 @@
 
+@import "bulma-0.8.0/sass/utilities/initial-variables";
+@import "bulma-0.8.0/sass/utilities/functions";
+
+$success: #FFF35E;
+$dark: #6B5B95;
+$light: #9E78FF;
+$primary: #39B346;
+
 @import "bulma-0.8.0/bulma";
 
 .notification:not(:last-child) {
@@ -7,6 +15,8 @@
 
 body {
 	height: 100vh;
+	background: $dark;
+	color: #fff;
 }
 
 .modal-card-foot {
@@ -19,4 +29,8 @@ body {
 
 .modal-card-body {
 	padding: 0;
+}
+
+.navbar-menu {
+	background: $dark;
 }

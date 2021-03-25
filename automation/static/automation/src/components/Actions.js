@@ -10,15 +10,11 @@ class Buttons extends Component {
 		  data: this.props.data
   };
   
-  toggleRelay(el) {
-	if (el.simulationEnabled) {
-		alert('No se puede utilizar manualmente cuando la simulación está activada. Desactive la simulación.');
-		return;
-	}
-	var url = 'togglerelay/';
+  executeaction(el) {
+	var url = 'executeaction/';
 	
-	var data = {relay: el.id, dateOfUse: new Date().toISOString(), status: !el.status};
-
+	var data = {action: el.id, priority: 1, duration:15};
+	
     const value = '; ' + document.cookie;
     const parts = value.split('; ' + 'csrftoken' + '=');
     
@@ -64,9 +60,9 @@ class Buttons extends Component {
 	  }
 	  return <ul className="has-text-centered">  
 	  {this.state.data.map(el => (
-			  <li key={el.id} className="notification">
-	  		  <button className={el.status ? "button is-success" : "button is-light"} key={el.id} onClick={() => this.toggleRelay(el)}>
-	  		  {el.name}
+			  <li key={el.id} className={el.status ? "notification is-success" : "notification is-grey"}>
+	  		  <button className={el.status ? "button is-success" : "button is-grey"} key={el.id} onClick={() => this.executeaction(el)}>
+	  		  {el.description}
 	  		  </button>
 	  		  </li>
 	  		  ))}

@@ -1,10 +1,11 @@
 from django.contrib import admin
 
-# Register your models here.
-from automation.models import Relay, DeviceGroup, PirSensor, LightSensor, Led
+from automation.models import Relay, Action,Switch, Clock, LightSensor, PIRSensor, Raspi
 
-admin.site.register(DeviceGroup)
+admin.site.register(Raspi)
 admin.site.register(Relay)
-admin.site.register(PirSensor)
+admin.site.register(Action)
+admin.site.register(Switch)
+admin.site.register(Clock)
 admin.site.register(LightSensor)
-admin.site.register(Led)
+admin.site.register(PIRSensor)

@@ -29,7 +29,7 @@ class Camera extends Component {
 			return;
 		}
 		this.setState({fetching: true});
-		fetch('getmedia/').then(res => {
+		fetch('media/').then(res => {
 			if (res.ok) 
 				return res.json();
 			else

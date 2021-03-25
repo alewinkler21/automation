@@ -18,7 +18,7 @@ import subprocess
 import uuid
 import cv2
 import notify
-# from notify import notify
+import imutils
 
 # setup django in order to use models
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "raspberry.settings")
@@ -107,6 +107,8 @@ class VideoAnalysis(Thread):
                     # Capture frame-by-frame
                     ret, frame = cap.read()
                     if ret == True:
+                        # Resizing the Image 
+#                         frame = imutils.resize(frame, width=min(400, frame.shape[1]))
                         # Detecting all the regions in the  
                         # Image that has a pedestrians inside it 
                         (regions, _) = hog.detectMultiScale(frame,  
