@@ -15,7 +15,7 @@ import requests
 r = redis.Redis(host='127.0.0.1', port=6379, db=0)
 
 class Raspi(models.Model):
-    address = models.CharField(max_length=50, default="127.0.0.1")
+    address = models.CharField(max_length=50, default="127.0.0.1", unique=True)
     identifier = models.CharField(max_length=50)
     timeZone = models.CharField(max_length=50, default="America/Montevideo")
     mediaPath = models.CharField(max_length=100, default="/var/www/html/camera/")
@@ -49,12 +49,12 @@ class Action(models.Model):
     def __redisKey(self, actionId):
         return "timed.action.{}".format(actionId)
 
-    def __canExecute(self, priority):
+    def __canExecute(self, priority, status):
         lastAction = ActionHistory.objects.filter(action_id=self.id).last()
         if lastAction:
-            newStatus = not lastAction.status
+            newStatus = not lastAction.status if status is None else status
             inconsistentStatus = len(self.relays.filter(status=newStatus)) > 0
-            higherPriorityExists = lastAction.priority >= priority and r.get(self.__redisKey(lastAction.id)) is not None
+            higherPriorityExists = newStatus and lastAction.priority > priority and r.get(self.__redisKey(lastAction.id)) is not None
             if inconsistentStatus:
                 error = "action {} not executed due to a previous action with the same status".format(self.description)
             elif higherPriorityExists:
@@ -62,9 +62,10 @@ class Action(models.Model):
             else:
                 error = None
             canExecute = not inconsistentStatus and not higherPriorityExists
-            return canExecute, newStatus, error;
         else:
-            return True, True, None;
+            canExecute, newStatus, error = True, True, None
+            
+        return canExecute, newStatus, error
 
     def __setTurnOffTime(self, duration):
         key = self.__redisKey(self.id)
@@ -73,9 +74,9 @@ class Action(models.Model):
         r.expire(key, duration)
         logger.info("set automatic turn off for action {} after {} seconds".format(self.description, duration))
 
-    def execute(self, priority, duration=0):
+    def execute(self, priority = 0, status = None, duration=0):
         if self.raspi.address == "127.0.0.1": 
-            canExecute, status, error = self.__canExecute(priority)
+            canExecute, status, error = self.__canExecute(priority, status)
             if canExecute:
                 for r in self.relays.all():
                     toggleGPIO(not status if r.isNormallyClosed else status, r.pin)
@@ -86,7 +87,7 @@ class Action(models.Model):
                 logger.info("action {} executed".format(self.description))
                 if status and duration > 0:
                     self.__setTurnOffTime(duration)
-                return status
+                return status, priority, duration
             else:
                 raise ValueError(error)
         else:

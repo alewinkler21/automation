@@ -37,8 +37,8 @@ class ExecuteAction(APIView):
             data = serializer.validated_data
             action = data["action"]
             try:
-                result = action.execute(data["priority"], data["duration"])
-                data["status"] = result
+                newStatus, priority, duration = action.execute(priority=data["priority"], duration=data["duration"])
+                data["status"] = newStatus
                 serializer.save()
                 
                 return Response(serializer.data, status=status.HTTP_200_OK)
