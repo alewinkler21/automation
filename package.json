@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "webpack --mode development ./automation/static/automation/src/index.js --output ./automation/static/automation/main.js",
-    "build": "webpack --mode production ./automation/static/automation/src/index.js --output ./automation/static/automation/main.js"
+    "dev": "webpack --mode development ./automation/static/automation/src/index.js --output ./automation/static/automation/js/main.js",
+    "build": "webpack --mode production ./automation/static/automation/src/index.js --output ./automation/static/automation/js/main.js"
   },
   "repository": {
     "type": "git",

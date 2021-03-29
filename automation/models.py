@@ -46,8 +46,8 @@ class Action(models.Model):
     relays = models.ManyToManyField(Relay)
     status = models.BooleanField(default=False, editable=False)
     
-    def __redisKey(self, actionId, status):
-        return "action.{}.{}".format("on" if status else "off", actionId)
+    def __redisKey(self, action = None):
+        return "action.{}".format(self.id if action is None else action.id)
 
     def __canExecute(self, priority, status):
         relatedActions = Action.objects.filter(relays__id__in = self.relays.all()).distinct()
@@ -57,10 +57,10 @@ class Action(models.Model):
         higherPriorityExists = (status 
                                 and lastActionExecuted is not None 
                                 and lastActionExecuted.priority > priority 
-                                and r.get(self.__redisKey(lastActionExecuted.id)) is not None)
+                                and r.get(self.__redisKey(lastActionExecuted.action)) is not None)
         inconsistentStatus = len(self.relays.filter(status=status)) > 0 
         if inconsistentStatus:
-            error = "action {} not executed due to a previous action with the same status".format(self.description)
+            error = "action {} not executed due to an inconsistent status".format(self.description)
         elif higherPriorityExists:
             error = "action {} not executed due to a previous action with higher priority".format(self.description)
         else:
@@ -69,12 +69,18 @@ class Action(models.Model):
         
         return canExecute, status, error
 
-    def __setActionTimer(self, duration, status):
-        key = self.__redisKey(self.id, status)
-        r.sadd("actions.{}".format("on" if status else "off"), key)
+    def __setActionTimer(self, duration):
+        key = self.__redisKey()
+        r.sadd("timed.actions", key)
         r.set(key, self.id)
         r.expire(key, duration)
         logger.info("set automatic turn off for action {} after {} seconds".format(self.description, duration))
+
+    def __removeActionTimer(self):
+        key = self.__redisKey()
+        r.delete(key)
+        r.srem("timed.actions", key)
+        logger.info("remove automatic turn off for action {}".format(self.description))
 
     def execute(self, priority = 0, status = None, duration=0):
         if self.raspi.address == "127.0.0.1": 
@@ -87,8 +93,11 @@ class Action(models.Model):
                 self.status = status
                 self.save()
                 logger.info("action {} executed".format(self.description))
-                if duration > 0:
-                    self.__setActionTimer(duration, status)
+                if not status:
+                    self.__removeActionTimer()
+                elif duration > 0:
+                    self.__setActionTimer(duration)
+                    
                 return status, priority, duration
             else:
                 raise ValueError(error)

@@ -20,11 +20,11 @@ class ActionsTimer(Thread):
             return  None
 
     def run(self):
-        listKey = "actions.on"
+        keysList = "timed.actions"
         while True:
             logger.debug("Let's check what to turn off")
             
-            timedActionsKeys = r.smembers(listKey)
+            timedActionsKeys = r.smembers(keysList)
             if len(timedActionsKeys) > 0:
                 for ta in timedActionsKeys:
                     timedActionKey = str(ta, "UTF-8")
@@ -43,15 +43,15 @@ class ActionsTimer(Thread):
                                 actionHistory.duration = duration
                                 actionHistory.save()
                                 
-                                r.srem(listKey, timedActionKey)
+                                r.srem(keysList, timedActionKey)
                                 
                                 logger.debug("action {} expired".format(timedActionKey))
                             except ValueError as e:
-                                r.srem(listKey, timedActionKey)
+                                r.srem(keysList, timedActionKey)
                                 logger.error(e)
                         else:
                             r.delete(timedActionKey)
-                            r.srem(listKey, timedActionKey)
+                            r.srem(keysList, timedActionKey)
                             logger.error("action {} doesn't exist".format(actionId))
                     else:
                         action = self.__getAction(str(actionId, "UTF-8"))
