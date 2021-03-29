@@ -46,30 +46,32 @@ class Action(models.Model):
     relays = models.ManyToManyField(Relay)
     status = models.BooleanField(default=False, editable=False)
     
-    def __redisKey(self, actionId):
-        return "timed.action.{}".format(actionId)
+    def __redisKey(self, actionId, status):
+        return "action.{}.{}".format("on" if status else "off", actionId)
 
     def __canExecute(self, priority, status):
-        lastAction = ActionHistory.objects.filter(action_id=self.id).last()
-        if lastAction:
-            newStatus = not lastAction.status if status is None else status
-            inconsistentStatus = len(self.relays.filter(status=newStatus)) > 0
-            higherPriorityExists = newStatus and lastAction.priority > priority and r.get(self.__redisKey(lastAction.id)) is not None
-            if inconsistentStatus:
-                error = "action {} not executed due to a previous action with the same status".format(self.description)
-            elif higherPriorityExists:
-                error = "action {} not executed due to a previous action with higher priority".format(self.description)
-            else:
-                error = None
-            canExecute = not inconsistentStatus and not higherPriorityExists
+        relatedActions = Action.objects.filter(relays__id__in = self.relays.all()).distinct()
+        lastActionExecuted = ActionHistory.objects.filter(action__id__in = relatedActions).last()
+        if status is None:
+            status = not self.status
+        higherPriorityExists = (status 
+                                and lastActionExecuted is not None 
+                                and lastActionExecuted.priority > priority 
+                                and r.get(self.__redisKey(lastActionExecuted.id)) is not None)
+        inconsistentStatus = len(self.relays.filter(status=status)) > 0 
+        if inconsistentStatus:
+            error = "action {} not executed due to a previous action with the same status".format(self.description)
+        elif higherPriorityExists:
+            error = "action {} not executed due to a previous action with higher priority".format(self.description)
         else:
-            canExecute, newStatus, error = True, True, None
-            
-        return canExecute, newStatus, error
+            error = None
+        canExecute = not inconsistentStatus and not higherPriorityExists
+        
+        return canExecute, status, error
 
-    def __setTurnOffTime(self, duration):
-        key = self.__redisKey(self.id)
-        r.sadd("timed.actions", key)
+    def __setActionTimer(self, duration, status):
+        key = self.__redisKey(self.id, status)
+        r.sadd("actions.{}".format("on" if status else "off"), key)
         r.set(key, self.id)
         r.expire(key, duration)
         logger.info("set automatic turn off for action {} after {} seconds".format(self.description, duration))
@@ -85,8 +87,8 @@ class Action(models.Model):
                 self.status = status
                 self.save()
                 logger.info("action {} executed".format(self.description))
-                if status and duration > 0:
-                    self.__setTurnOffTime(duration)
+                if duration > 0:
+                    self.__setActionTimer(duration, status)
                 return status, priority, duration
             else:
                 raise ValueError(error)
@@ -121,7 +123,7 @@ class Actionable(models.Model):
     def __str__(self):
         return self.name
     
-    def actuate(self, status):
+    def actuate(self):
         raise NotImplementedError
     
     class Meta:
@@ -131,9 +133,9 @@ class Switch(Actionable):
     duration = models.IntegerField();
     pin = models.IntegerField();
     
-    def actuate(self, status):
+    def actuate(self):
         if self.action:
-            self.action.execute(status, self.priority, self.duration)
+            self.action.execute(priority=self.priority, duration=self.duration)
     
 class Clock(Actionable):
     timeEnd = models.TimeField()
