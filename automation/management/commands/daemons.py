@@ -43,8 +43,6 @@ class ActionsTimer(Thread):
                                 actionHistory.duration = duration
                                 actionHistory.save()
                                 
-                                r.srem(keysList, timedActionKey)
-                                
                                 logger.debug("action {} expired".format(timedActionKey))
                             except ValueError as e:
                                 r.srem(keysList, timedActionKey)
