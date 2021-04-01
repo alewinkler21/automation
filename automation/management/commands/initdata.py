@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
-from automation.models import Relay, Action, ActionHistory, Switch
-
+from automation.models import Relay, Action, ActionHistory, Switch, Clock
+from datetime import time
 from raspberry.settings import AUTOMATION
 
 class Command(BaseCommand):
@@ -12,6 +12,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         ActionHistory.objects.all().delete()
         Switch.objects.all().delete()
+        Clock.objects.all().delete()
         Action.objects.all().delete()
         Relay.objects.all().delete()
         
@@ -63,7 +64,19 @@ class Command(BaseCommand):
         switch.pin = 16
         switch.duration = 30
         switch.priority = 1
+        switch.action = action2
+        switch.save()
         
         self.stdout.write("Switch {} was created".format(switch.name))
         
+        clock = Clock()
+        clock.name = "10 a 12"
+        clock.priority = 3
+        clock.timeStart = time(hour = 10, minute = 0)
+        clock.timeEnd = time(hour = 12, minute = 0)
+        clock.action = action3
+        clock.save()
+        
+        self.stdout.write("Clock {} was created".format(clock.name))
+                
         self.stdout.write(self.style.SUCCESS("Initial data was created successfully"))

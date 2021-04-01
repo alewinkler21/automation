@@ -148,8 +148,11 @@ class Switch(Actionable):
     
     def actuate(self):
         if self.action:
-            self.action.execute(priority=self.priority, duration=self.duration)
-    
+            try:
+                self.action.execute(priority=self.priority, duration=self.duration)
+            except ValueError as e:
+                logger.warning(e)
+
 class Clock(Actionable):
     timeEnd = models.TimeField()
     timeStart = models.TimeField()
@@ -165,8 +168,11 @@ class Clock(Actionable):
             duration = timedelta.days * 24 * 3600 + timedelta.seconds
             # calculate status
             status = True if now >= timeStart and now < timeEnd else False
-            if self.action.status != status:     
-                self.action.execute(status, self.priority, duration)
+            if self.action.status != status:
+                try:
+                    self.action.execute(priority=self.priority, status=status, duration=duration)
+                except ValueError as e:
+                    logger.warning(e)
 
 class LightSensor(Actionable):
     pin = models.IntegerField();

@@ -44,7 +44,7 @@ class ExecuteAction(APIView):
                 
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except ValueError as e:
-                logger.error(e)
+                logger.warning(e)
                 return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
