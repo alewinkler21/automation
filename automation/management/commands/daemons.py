@@ -34,14 +34,7 @@ class ActionsTimer(Thread):
                         action = self.__getAction(actionId)
                         if action:
                             try:
-                                status, priority, duration = action.execute(status=False)
-
-                                actionHistory = ActionHistory()
-                                actionHistory.action = action
-                                actionHistory.priority = priority
-                                actionHistory.status = status
-                                actionHistory.duration = duration
-                                actionHistory.save()
+                                action.execute(status=False)
                                 
                                 logger.debug("action {} expired".format(timedActionKey))
                             except ValueError as e:

@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
-from automation.models import Raspi, Relay, Action, ActionHistory, Switch
+from automation.models import Relay, Action, ActionHistory, Switch
 
-import socket
+from raspberry.settings import AUTOMATION
 
 class Command(BaseCommand):
     help = "Add default data to database"
@@ -13,16 +13,9 @@ class Command(BaseCommand):
         ActionHistory.objects.all().delete()
         Switch.objects.all().delete()
         Action.objects.all().delete()
-        Raspi.objects.all().delete()
         Relay.objects.all().delete()
         
         self.stdout.write("Existent data was deleted")
-        
-        raspi = Raspi()
-        raspi.identifier = socket.gethostname()
-        raspi.save()
-        
-        self.stdout.write("Raspi {} was created".format(raspi.identifier))
         
         relay1 = Relay()
         relay1.name = "Module1"
@@ -41,7 +34,7 @@ class Command(BaseCommand):
         self.stdout.write("Relay {} was created".format(relay2.name))
         
         action1 = Action()
-        action1.raspi = raspi
+        action1.address = AUTOMATION["address"]
         action1.description = "Lámpara Mesita"
         action1.save()
         action1.relays.add(relay1)
@@ -49,7 +42,7 @@ class Command(BaseCommand):
         self.stdout.write("Action {} was created".format(action1.description))
 
         action2 = Action()
-        action2.raspi = raspi
+        action2.address = AUTOMATION["address"]
         action2.description = "Luz Techo"
         action2.save()
         action2.relays.add(relay2)
@@ -57,7 +50,7 @@ class Command(BaseCommand):
         self.stdout.write("Action {} was created".format(action2.description))
         
         action3 = Action()
-        action3.raspi = raspi
+        action3.address = AUTOMATION["address"]
         action3.description = "Lámpara Mesita y Luz Techo"
         action3.save()
         action3.relays.add(relay1)

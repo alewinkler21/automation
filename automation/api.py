@@ -8,8 +8,10 @@ import logger
 import threading
 import os
 
-from automation.models import Action, Alarm, Media, Raspi
+from automation.models import Action, Alarm, Media
 from automation.serializers import ActionSerializer, ActionHistorySerializer, AlarmSerializer, MediaSerializer
+
+from raspberry.settings import AUTOMATION
 
 class JSONResponse(HttpResponse):
     def __init__(self, data, **kwargs):
@@ -39,7 +41,6 @@ class ExecuteAction(APIView):
             try:
                 newStatus, priority, duration = action.execute(priority=data["priority"], duration=data["duration"])
                 data["status"] = newStatus
-                serializer.save()
                 
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except ValueError as e:
@@ -91,8 +92,7 @@ class DeleteMedia(APIView):
 
     def post(self, request, format=None):
         identifier = request.data
-        raspi = Raspi.thisRaspi()
-        [self.__deleteMedia(media, raspi.mediaPath) for media in Media.objects.filter(identifier=identifier)]
+        [self.__deleteMedia(media, AUTOMATION['mediaPath']) for media in Media.objects.filter(identifier=identifier)]
         
         return Response(identifier, status=status.HTTP_200_OK)
 

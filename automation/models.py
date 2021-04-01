@@ -10,26 +10,10 @@ import subprocess
 import os
 import sys
 import requests
+from raspberry.settings import TIME_ZONE, AUTOMATION
 #from picamera import PiCamera, PiCameraMMALError
 
 r = redis.Redis(host='127.0.0.1', port=6379, db=0)
-
-class Raspi(models.Model):
-    address = models.CharField(max_length=50, default="127.0.0.1", unique=True)
-    identifier = models.CharField(max_length=50)
-    timeZone = models.CharField(max_length=50, default="America/Montevideo")
-    mediaPath = models.CharField(max_length=100, default="/var/www/html/camera/")
-    onDemandVideoDuration = models.IntegerField(default=15);
-
-    @staticmethod
-    def thisRaspi():
-        try:
-            return Raspi.objects.filter(address="127.0.0.1")[0]
-        except IndexError:
-            raise ValueError("no raspi found for address 127.0.0.1")
-
-    def __str__(self):
-        return self.identifier
     
 class Relay(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -41,13 +25,16 @@ class Relay(models.Model):
         return self.name
 
 class Action(models.Model):
-    raspi = models.ForeignKey(Raspi, on_delete=models.PROTECT)
+    address = models.CharField(max_length=50, default="127.0.0.1")
     description = models.CharField(max_length=50, unique=True)
     relays = models.ManyToManyField(Relay)
     status = models.BooleanField(default=False, editable=False)
     
-    def __redisKey(self, action = None):
-        return "action.{}".format(self.id if action is None else action.id)
+    def turnOffFlag(self):
+        return "on.action.{}".format(self.id)
+
+    def keepOffFlag(self):
+        return "off.action.{}".format(self.id)
 
     def __canExecute(self, priority, status):
         relatedActions = Action.objects.filter(relays__id__in = self.relays.all()).distinct()
@@ -57,8 +44,11 @@ class Action(models.Model):
         higherPriorityExists = (status 
                                 and lastActionExecuted is not None 
                                 and lastActionExecuted.priority > priority 
-                                and r.get(self.__redisKey(lastActionExecuted.action)) is not None)
-        inconsistentStatus = len(self.relays.filter(status=status)) > 0 
+                                and (r.get(lastActionExecuted.action.turnOffFlag()) is not None
+                                     or r.get(lastActionExecuted.action.keepOffFlag()) is not None))
+        inconsistentStatus = (lastActionExecuted is not None 
+                              and lastActionExecuted.action != self 
+                              and len(self.relays.filter(status=status)) > 0)
         if inconsistentStatus:
             error = "action {} not executed due to an inconsistent status".format(self.description)
         elif higherPriorityExists:
@@ -70,20 +60,26 @@ class Action(models.Model):
         return canExecute, status, error
 
     def __setActionTimer(self, duration):
-        key = self.__redisKey()
+        key = self.turnOffFlag()
         r.sadd("timed.actions", key)
         r.set(key, self.id)
         r.expire(key, duration)
         logger.info("set automatic turn off for action {} after {} seconds".format(self.description, duration))
 
     def __removeActionTimer(self):
-        key = self.__redisKey()
-        r.delete(key)
+        key = self.turnOffFlag()
         r.srem("timed.actions", key)
+        r.delete(key)
         logger.info("remove automatic turn off for action {}".format(self.description))
 
+    def __setKeepOffFlag(self, duration):
+        key = self.keepOffFlag()
+        r.set(key, self.id)
+        r.expire(key, duration)
+        logger.info("set keep off for action {} during {} seconds".format(self.description, duration))
+
     def execute(self, priority = 0, status = None, duration=0):
-        if self.raspi.address == "127.0.0.1": 
+        if self.address == "127.0.0.1": 
             canExecute, status, error = self.__canExecute(priority, status)
             if canExecute:
                 for r in self.relays.all():
@@ -92,12 +88,20 @@ class Action(models.Model):
                     r.save()
                 self.status = status
                 self.save()
+                # save history
+                actionHistory = ActionHistory()
+                actionHistory.action = self
+                actionHistory.priority = priority
+                actionHistory.status = status
+                actionHistory.duration = duration
+                actionHistory.save()
+                
                 logger.info("action {} executed".format(self.description))
                 if not status:
                     self.__removeActionTimer()
-                elif duration > 0:
-                    self.__setActionTimer(duration)
-                    
+                if duration > 0:
+                    self.__setActionTimer(duration) if status else self.__setKeepOffFlag(duration)
+
                 return status, priority, duration
             else:
                 raise ValueError(error)
@@ -150,18 +154,20 @@ class Clock(Actionable):
     timeEnd = models.TimeField()
     timeStart = models.TimeField()
 
-    def actuate(self, status):
+    def actuate(self):
         if self.action:
             # calculate duration
-            timeZone = pytz.timezone(self.action.raspi.timezone)
+            timeZone = pytz.timezone(TIME_ZONE)
             now = datetime.now(tz=timeZone)
             timeStart = timeZone.localize(datetime.combine(now, self.timeStart))
             timeEnd = timeZone.localize(datetime.combine(now, self.timeEnd)) if self.timeEnd > self.timeStart else timeZone.localize(datetime.combine(now + timedelta(days=1), self.timeEnd))
-            timedelta = timeEnd - timeStart
+            timedelta = timeEnd - now
             duration = timedelta.days * 24 * 3600 + timedelta.seconds
-    
-            self.action.execute(status, self.priority, duration)
-                 
+            # calculate status
+            status = True if now >= timeStart and now < timeEnd else False
+            if self.action.status != status:     
+                self.action.execute(status, self.priority, duration)
+
 class LightSensor(Actionable):
     pin = models.IntegerField();
     threshold = models.IntegerField();
@@ -180,7 +186,7 @@ class PIRSensor(Actionable):
     def actuate(self, status):
         if self.action:
             # calculate duration
-            timeZone = pytz.timezone(self.action.raspi.timezone)
+            timeZone = pytz.timezone(TIME_ZONE)
             now = datetime.now(tz=timeZone)
             duration = self.durationLong if now >= self.longTimeStart and now < self.longTimeEnd else self.durationShort
             
@@ -204,21 +210,20 @@ class Media(models.Model):
     triggeredByAlarm = models.BooleanField(default=False)
     type = models.CharField(max_length=5)
     
-    def __redisKey(self):
+    def turnOffFlag(self):
         return "recording"
     
     def __canRecord(self):
-        return r.get(self.__redisKey()) is None
+        return r.get(self.turnOffFlag()) is None
     
     def __setRecordingFlag(self, duration):
-        key = self.__redisKey()
+        key = self.turnOffFlag()
         r.set(key, self.identifier)
         r.expire(key, duration)
         logger.info("set recording flag for {}, duration {} seconds".format(self.identifier, duration))
 
     @staticmethod
     def recordVideo():
-        raspi = Raspi.thisRaspi()
         identifier = uuid.uuid1().hex
         fileNameH264 = "{}.h264".format(identifier)
         fileNameMP4 = "{}.mp4".format(identifier)
@@ -233,19 +238,19 @@ class Media(models.Model):
 #                 try:
 #                     logger.info("start recording video {}".format(media.identifier))
 #                     
-#                     media.__setRecordingFlag(raspi.onDemandVideoDuration)
+#                     media.__setRecordingFlag(AUTOMATION["onDemandVideoDuration"])
 #                     
-#                     camera.start_recording("{}{}".format(raspi.mediaPath, fileNameH264))
-#                     camera.wait_recording(raspi.onDemandVideoDuration)
+#                     camera.start_recording("{}{}".format(AUTOMATION["mediaPath"], fileNameH264))
+#                     camera.wait_recording(AUTOMATION["onDemandVideoDuration"])
 #                     camera.stop_recording()
 #                     
 #                     logger.info("stop recording video {} and release camera".format(media.identifier))
 #                     # convert to mp4 format
-#                     subprocess.run(["MP4Box", "-add", "{}{}".format(raspi.mediaPath, fileNameH264), "{}{}".format(raspi.mediaPath, fileNameMP4)], stdout=subprocess.DEVNULL)
+#                     subprocess.run(["MP4Box", "-add", "{}{}".format(AUTOMATION["mediaPath"], fileNameH264), "{}{}".format(AUTOMATION["mediaPath"], fileNameMP4)], stdout=subprocess.DEVNULL)
 #                     
 #                     media.save()
 #                     # remove H264 file
-#                     os.remove("{}{}".format(raspi.mediaPath, fileNameH264))
+#                     os.remove("{}{}".format(AUTOMATION["mediaPath"], fileNameH264))
 #                 except PiCameraMMALError as error:
 #                     logger.error(error)
 #                 except:
