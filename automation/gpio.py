@@ -21,3 +21,6 @@ def initButton(button, fn):
     GPIO.setup(button.pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
     # subscribe to rising event
     GPIO.add_event_detect(button.pin, GPIO.RISING, callback=lambda x: fn(button), bouncetime=500)
+
+def cleanUp():
+    GPIO.cleanup()

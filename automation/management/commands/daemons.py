@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from automation.models import Action, Switch, Clock
+from automation.models import Action, Switch, Clock, Relay
 from automation import gpio
 
 import signal
@@ -66,6 +66,10 @@ class ClockTimer(Thread):
             self.clock.actuate()
             time.sleep(2)
 
+def initRelays():
+    for r in Relay.objects.filter(isNormallyClosed=True):
+        gpio.toggleGPIO(True, r.pin)
+
 def buttonPressed(button):
     button.actuate()
 
@@ -78,7 +82,7 @@ def initClocks():
         clockTimer = ClockTimer(clock)
         clockTimer.setDaemon(True)
         clockTimer.start()
-    
+
 def startActionsTimer():
     actionsTimer = ActionsTimer()
     actionsTimer.setDaemon(True)
@@ -87,7 +91,7 @@ def startActionsTimer():
 
 def terminateProcess(signalNumber, frame):
     logger.info("(SIGTERM) terminating the process")
-    #GPIO.cleanup()
+    gpio.cleanUp()
     sys.exit()
         
 class Command(BaseCommand):
@@ -99,9 +103,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         signal.signal(signal.SIGTERM, terminateProcess)
         try:
+            initRelays()
             initButtons()
             initClocks()
             startActionsTimer()
         except KeyboardInterrupt:
-            #GPIO.cleanup()
+            gpio.cleanUp()
             sys.exit()
