@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from automation.models import Action, Switch, Clock, Relay
+from automation.models import Action, Switch, Clock, Relay, LightSensor
 from automation import gpio
 
 import signal
@@ -66,6 +66,18 @@ class ClockTimer(Thread):
             self.clock.actuate()
             time.sleep(2)
 
+class LightSensorMonitor(Thread):
+
+    def __init__(self, sensor):
+        super(LightSensorMonitor, self).__init__()
+        self.sensor = sensor
+
+    def run(self):
+        while True:
+            darkness = gpio.timeToHigh(self.sensor.pin)
+            self.sensor.setDarkness(darkness)
+            time.sleep(1)
+
 def initRelays():
     for r in Relay.objects.filter(isNormallyClosed=True):
         gpio.toggleGPIO(True, r.pin)
@@ -82,6 +94,12 @@ def initClocks():
         clockTimer = ClockTimer(clock)
         clockTimer.setDaemon(True)
         clockTimer.start()
+
+def initLightSensors():
+    for lightSensor in LightSensor.objects.all():
+        lightSensorMonitor = LightSensorMonitor(lightSensor)
+        lightSensorMonitor.setDaemon(True)
+        lightSensorMonitor.start()
 
 def startActionsTimer():
     actionsTimer = ActionsTimer()
@@ -106,6 +124,7 @@ class Command(BaseCommand):
             initRelays()
             initButtons()
             initClocks()
+            initLightSensors()
             startActionsTimer()
         except KeyboardInterrupt:
             gpio.cleanUp()

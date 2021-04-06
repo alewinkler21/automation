@@ -148,6 +148,7 @@ class Switch(Actionable):
     
     def actuate(self):
         if self.action:
+            logger.info("{} actuated on {}".format(self.name, self.action))
             try:
                 self.action.execute(priority=self.priority, duration=self.duration)
             except ValueError as e:
@@ -169,6 +170,7 @@ class Clock(Actionable):
             # calculate status
             status = True if now >= timeStart and now < timeEnd else False
             if self.action.status != status:
+                logger.info("{} actuated on {}".format(self.name, self.action))
                 try:
                     self.action.execute(priority=self.priority, status=status, duration=duration)
                 except ValueError as e:
@@ -178,10 +180,38 @@ class LightSensor(Actionable):
     pin = models.IntegerField();
     threshold = models.IntegerField();
 
-    def actuate(self, status):
-        if self.action:
-            self.action.execute(status, self.priority)
+    def __sensorKey(self):
+        return "light.sensor.{}".format(self.id)
+    
+    def getDarkness(self):
+        key = self.__sensorKey()
+        darkness = r.get(key)
+        if darkness is None:
+            return False
+        else:
+            return bool(darkness)
+
+    def setDarkness(self, darkness):
+        isDark = darkness > self.threshold
+        
+        logger.debug("darkness:{} isDark:{}".format(darkness, isDark))
+        
+        if isDark != self.getDarkness():
+            key = self.__sensorKey()
+            r.set(key, bytes(isDark))
             
+            logger.info("set darkness {} for sensor {}".format(isDark, self.name))
+
+            self.actuate()
+
+    def actuate(self):
+        if self.action:
+            logger.info("{} actuated on {}".format(self.name, self.action))
+            try:
+                self.action.execute(priority=self.priority, status=self.getDarkness())
+            except ValueError as e:
+                logger.warning(e)
+
 class PIRSensor(Actionable):
     durationLong = models.IntegerField();
     durationShort = models.IntegerField();

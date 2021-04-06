@@ -13,7 +13,7 @@ scp automation/templates/automation/index.html raspberry2:/opt/houseremote/autom
 scp automation/admin.py raspberry2:/opt/houseremote/automation
 scp automation/api.py raspberry2:/opt/houseremote/automation
 scp automation/apps.py raspberry2:/opt/houseremote/automation
-scp automation/models.py raspberry2:/opt/houseremote/automation
+scp automation/gpio.py raspberry2:/opt/houseremote/automation
 scp automation/models.py raspberry2:/opt/houseremote/automation
 scp automation/serializers.py raspberry2:/opt/houseremote/automation
 scp automation/urls.py raspberry2:/opt/houseremote/automation

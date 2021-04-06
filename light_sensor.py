@@ -25,19 +25,19 @@ def init():
     GPIO.setwarnings(False)
     GPIO.setmode(GPIO.BCM)
 
-def getLightSensorValue(pinLightSensor):
+def getLightSensorValue(pin):
     # output on the pin for 
-    GPIO.setup(pinLightSensor, GPIO.OUT)
-    GPIO.output(pinLightSensor, GPIO.LOW)
+    GPIO.setup(pin, GPIO.OUT)
+    GPIO.output(pin, GPIO.LOW)
     time.sleep(0.1)
     # change the pin back to input
-    GPIO.setup(pinLightSensor, GPIO.IN)
+    GPIO.setup(pin, GPIO.IN)
     # count until the pin goes high or timeout
     count = 0
     sensorTimeOut = 10
     timedOut = False
     ts = time.time()
-    while (GPIO.input(pinLightSensor) == GPIO.LOW and not timedOut):
+    while (GPIO.input(pin) == GPIO.LOW and not timedOut):
         count += 1
         timedOut = (time.time() - ts) > sensorTimeOut
         time.sleep(0.1)
