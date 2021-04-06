@@ -32,13 +32,13 @@ def timeToHigh(pin):
     # change the pin back to input
     GPIO.setup(pin, GPIO.IN)
     # count until the pin goes high or timeout
-    count = 1
+    count = 0
     sensorTimeOut = 10
     timedOut = False
     ts = time.time()
     while (GPIO.input(pin) == GPIO.LOW and not timedOut):
         count += 1
-        timedOut = (time.time() - ts) > sensorTimeOut
+        timedOut = (time.time() - ts) >= sensorTimeOut
         time.sleep(0.1)
     if timedOut:
         logger.warning("Sensor timed out. Count is " + str(count))

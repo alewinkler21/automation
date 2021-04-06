@@ -43,7 +43,7 @@ class Action(models.Model):
             status = not self.status
         higherPriorityExists = (status 
                                 and lastActionExecuted is not None 
-                                and lastActionExecuted.priority > priority 
+                                and lastActionExecuted.priority < priority 
                                 and (r.get(lastActionExecuted.action.turnOffFlag()) is not None
                                      or r.get(lastActionExecuted.action.keepOffFlag()) is not None))
         inconsistentStatus = (lastActionExecuted is not None 
@@ -96,7 +96,7 @@ class Action(models.Model):
                 actionHistory.duration = duration
                 actionHistory.save()
                 
-                logger.info("action {} executed".format(self.description))
+                logger.info("action {} turned {}".format(self.description, "on" if status else "off"))
                 if not status:
                     self.__removeActionTimer()
                 if duration > 0:
