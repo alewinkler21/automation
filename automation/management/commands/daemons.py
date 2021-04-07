@@ -61,7 +61,7 @@ class ClockTimer(Thread):
         
     def run(self):
         while True:
-            logger.debug("Clock {} tick".format(self.clock.name))
+            logger.debug("Clock {} tick".format(self.clock))
             
             self.clock.actuate()
             time.sleep(2)
