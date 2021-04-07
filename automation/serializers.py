@@ -21,4 +21,3 @@ class MediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Media
         fields = ('id', 'identifier', 'dateCreated', 'fileName', 'type', 'triggeredByAlarm', 'peopleDetected')
-

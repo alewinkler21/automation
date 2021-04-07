@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from automation.models import Action, Switch, Clock, Relay, LightSensor
+from automation.models import Action, Switch, Clock, Relay, LightSensor, PIRSensor
 from automation import gpio
 
 import signal
@@ -74,13 +74,34 @@ class LightSensorMonitor(Thread):
 
     def run(self):
         while True:
-            darkness = gpio.timeToHigh(self.sensor.pin)
+            darkness = gpio.timeToHigh(self.sensor)
             self.sensor.setDarkness(darkness)
+            time.sleep(1)
+
+class PIRSensorMonitor(Thread):
+
+    def __init__(self, sensor):
+        super(PIRSensorMonitor, self).__init__()
+        self.sensor = sensor
+
+    def run(self):
+        gpio.initSensor(self.sensor)
+        previousState = False
+        while True:
+            movement = gpio.readSensorValue(self.sensor)
+            if movement:
+                if movement != previousState:  # avoid repeating the same signal
+                    self.sensor.actuate()
+                else:
+                    logger.debug("Movement ignored")
+            else:
+                logger.debug("No movement")
+            previousState = movement
             time.sleep(1)
 
 def initRelays():
     for r in Relay.objects.filter(isNormallyClosed=True):
-        gpio.toggleGPIO(True, r.pin)
+        gpio.toggle(True, r.pin)
 
 def buttonPressed(button):
     button.actuate()
@@ -101,6 +122,12 @@ def initLightSensors():
         lightSensorMonitor.setDaemon(True)
         lightSensorMonitor.start()
 
+def initPIRSensors():
+    for pirSensor in PIRSensor.objects.all():
+        pirSensorMonitor = PIRSensorMonitor(pirSensor)
+        pirSensorMonitor.setDaemon(True)
+        pirSensorMonitor.start()
+
 def startActionsTimer():
     actionsTimer = ActionsTimer()
     actionsTimer.setDaemon(True)
@@ -111,7 +138,7 @@ def terminateProcess(signalNumber, frame):
     logger.info("(SIGTERM) terminating the process")
     gpio.cleanUp()
     sys.exit()
-        
+
 class Command(BaseCommand):
     help = "Start automation daemons"
 
@@ -125,6 +152,7 @@ class Command(BaseCommand):
             initButtons()
             initClocks()
             initLightSensors()
+            initPIRSensors()
             startActionsTimer()
         except KeyboardInterrupt:
             gpio.cleanUp()

@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 import pytz
 from datetime import datetime, timedelta
-from automation.gpio import toggleGPIO
+from automation.gpio import toggle
 import redis
 import logger
 import uuid
@@ -83,7 +83,7 @@ class Action(models.Model):
             canExecute, status, error = self.__canExecute(priority, status)
             if canExecute:
                 for r in self.relays.all():
-                    toggleGPIO(not status if r.isNormallyClosed else status, r.pin)
+                    toggle(not status if r.isNormallyClosed else status, r.pin)
                     r.status = status
                     r.save()
                 self.status = status
@@ -219,14 +219,18 @@ class PIRSensor(Actionable):
     longTimeStart = models.TimeField()
     pin = models.IntegerField();
 
-    def actuate(self, status):
+    def actuate(self):
         if self.action:
+            logger.info("{} actuated on {}".format(self.name, self.action))
             # calculate duration
             timeZone = pytz.timezone(TIME_ZONE)
             now = datetime.now(tz=timeZone)
             duration = self.durationLong if now >= self.longTimeStart and now < self.longTimeEnd else self.durationShort
             
-            self.action.execute(status, self.priority, duration)
+            try:
+                self.action.execute(priority=self.priority, status=True, duration=duration)
+            except ValueError as e:
+                logger.warning(e)
 
 class Alarm(models.Model):
     armed = models.BooleanField(default=False)
