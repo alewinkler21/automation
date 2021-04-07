@@ -30,7 +30,7 @@ def timeToHigh(pin):
     GPIO.output(pin, GPIO.LOW)
     time.sleep(0.1)
     # change the pin back to input
-    GPIO.setup(pin, GPIO.IN)
+    GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
     # count until the pin goes high or timeout
     count = 0
     sensorTimeOut = 10

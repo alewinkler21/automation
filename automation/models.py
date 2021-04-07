@@ -119,7 +119,7 @@ class Action(models.Model):
         return self.description
 
 class ActionHistory(models.Model):
-    action = models.ForeignKey(Action, on_delete=models.PROTECT)
+    action = models.ForeignKey(Action, on_delete=models.CASCADE)
     date = models.DateTimeField(auto_now_add=True, editable=False)
     duration = models.IntegerField();
     priority = models.IntegerField(default=100);
