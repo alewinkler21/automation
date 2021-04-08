@@ -101,7 +101,9 @@ class RecordVideo(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, format=None):
-        th = threading.Thread(target=Media.recordVideo())
-        th.start()
-
-        return JSONResponse({"status": "OK", "message": "Grabación iniciada"})
+        if Media.canRecord():
+            th = threading.Thread(target=Media.recordVideo())
+            th.start()
+            return Response("Recording started", status=status.HTTP_200_OK)
+        else:
+            return Response("There is already a recording started", status=status.HTTP_400_BAD_REQUEST)
