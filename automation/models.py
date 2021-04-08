@@ -22,7 +22,7 @@ class Relay(models.Model):
     status = models.BooleanField(default=False, editable=False)
 
     def __str__(self):
-        return self.name
+        return "{} {}".format(self.name, self.pin)
 
 class Action(models.Model):
     address = models.CharField(max_length=50, default="127.0.0.1")

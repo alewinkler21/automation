@@ -102,6 +102,7 @@ class PIRSensorMonitor(Thread):
 def initRelays():
     for r in Relay.objects.filter(isNormallyClosed=True):
         gpio.toggle(True, r.pin)
+    logger.info("Relays initiated")
 
 def buttonPressed(button):
     button.actuate()
@@ -109,29 +110,34 @@ def buttonPressed(button):
 def initButtons():
     for button in Switch.objects.all():
         gpio.initButton(button, buttonPressed)
+    logger.info("Buttons initiated")
         
 def initClocks():
     for clock in Clock.objects.all():
         clockTimer = ClockTimer(clock)
         clockTimer.setDaemon(True)
         clockTimer.start()
+    logger.info("Clocks initiated")
 
 def initLightSensors():
     for lightSensor in LightSensor.objects.all():
         lightSensorMonitor = LightSensorMonitor(lightSensor)
         lightSensorMonitor.setDaemon(True)
         lightSensorMonitor.start()
+    logger.info("Light sensors initiated")
 
 def initPIRSensors():
     for pirSensor in PIRSensor.objects.all():
         pirSensorMonitor = PIRSensorMonitor(pirSensor)
         pirSensorMonitor.setDaemon(True)
         pirSensorMonitor.start()
+    logger.info("PIR sensors initiated")
 
 def startActionsTimer():
     actionsTimer = ActionsTimer()
     actionsTimer.setDaemon(True)
     actionsTimer.start()
+    logger.info("Actions timer initiated")
     actionsTimer.join()
 
 def terminateProcess(signalNumber, frame):

@@ -22,7 +22,7 @@ class Command(BaseCommand):
         
         relay1 = Relay()
         relay1.name = "Module1"
-        relay1.pin = 23
+        relay1.pin = 27
         relay1.isNormallyClosed = True
         relay1.save()
 
@@ -30,11 +30,27 @@ class Command(BaseCommand):
     
         relay2 = Relay()
         relay2.name = "Module2"
-        relay2.pin = 24
+        relay2.pin = 16
         relay2.isNormallyClosed = True
         relay2.save()
         
         self.stdout.write("Relay {} was created".format(relay2))
+
+        relay3 = Relay()
+        relay3.name = "Module3"
+        relay3.pin = 22
+        relay3.isNormallyClosed = True
+        relay3.save()
+        
+        self.stdout.write("Relay {} was created".format(relay3))
+
+        relay4 = Relay()
+        relay4.name = "Module4"
+        relay4.pin = 12
+        relay4.isNormallyClosed = True
+        relay4.save()
+        
+        self.stdout.write("Relay {} was created".format(relay3))
         
         action1 = Action()
         action1.address = AUTOMATION["address"]
@@ -63,7 +79,7 @@ class Command(BaseCommand):
         
         switch = Switch()
         switch.name = "Interruptor Puerta"
-        switch.pin = 16
+        switch.pin = 10
         switch.duration = 30
         switch.priority = 1
         switch.action = action2
