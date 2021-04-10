@@ -22,7 +22,7 @@ class Relay(models.Model):
     status = models.BooleanField(default=False, editable=False)
 
     def __str__(self):
-        return "{} {}".format(self.name, self.pin)
+        return "{} ({})".format(self.name, self.pin)
 
 class Action(models.Model):
     address = models.CharField(max_length=50, default="127.0.0.1")
@@ -146,6 +146,9 @@ class Switch(Actionable):
     duration = models.IntegerField();
     pin = models.IntegerField();
     
+    def __str__(self):
+        return Actionable.__str__(self) + " ({})".format(self.pin)
+    
     def actuate(self):
         if self.action:
             logger.info("{} actuated on {}".format(self.name, self.action))
@@ -164,7 +167,9 @@ class Clock(Actionable):
             timeZone = pytz.timezone(TIME_ZONE)
             now = datetime.now(tz=timeZone)
             timeStart = timeZone.localize(datetime.combine(now, self.timeStart))
-            timeEnd = timeZone.localize(datetime.combine(now, self.timeEnd)) if self.timeEnd > self.timeStart else timeZone.localize(datetime.combine(now + timedelta(days=1), self.timeEnd))
+            timeEnd = (timeZone.localize(datetime.combine(now, self.timeEnd)) 
+                       if self.timeEnd > self.timeStart 
+                       else timeZone.localize(datetime.combine(now + timedelta(days=1), self.timeEnd)))
             timedelta = timeEnd - now
             duration = timedelta.days * 24 * 3600 + timedelta.seconds
             # calculate status
@@ -179,6 +184,9 @@ class Clock(Actionable):
 class LightSensor(Actionable):
     pin = models.IntegerField();
     threshold = models.IntegerField();
+
+    def __str__(self):
+        return Actionable.__str__(self) + " ({})".format(self.pin)
 
     def __sensorKey(self):
         return "light.sensor.{}".format(self.id)
@@ -219,13 +227,20 @@ class PIRSensor(Actionable):
     longTimeStart = models.TimeField()
     pin = models.IntegerField();
 
+    def __str__(self):
+        return Actionable.__str__(self) + " ({})".format(self.pin)
+    
     def actuate(self):
         if self.action:
             logger.info("{} actuated on {}".format(self.name, self.action))
             # calculate duration
             timeZone = pytz.timezone(TIME_ZONE)
             now = datetime.now(tz=timeZone)
-            duration = self.durationLong if now >= self.longTimeStart and now < self.longTimeEnd else self.durationShort
+            longTimeStart = timeZone.localize(datetime.combine(now, self.longTimeStart))
+            longTimeEnd = (timeZone.localize(datetime.combine(now, self.longTimeEnd)) 
+                           if self.longTimeEnd > self.longTimeStart 
+                           else timeZone.localize(datetime.combine(now + timedelta(days=1), self.longTimeEnd)))
+            duration = self.durationLong if now >= longTimeStart and now < longTimeEnd else self.durationShort
             
             try:
                 self.action.execute(priority=self.priority, status=True, duration=duration)
