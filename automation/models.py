@@ -290,13 +290,13 @@ class Media(models.Model):
         with PiCamera() as camera:
             try:
                 logger.info("start recording video {}".format(identifier))
-                 
+                  
                 Media.setRecordingFlag(identifier, duration)
-                 
+                  
                 camera.start_recording("{}{}".format(AUTOMATION["mediaPath"], fileNameH264))
                 camera.wait_recording(duration)
                 camera.stop_recording()
-                 
+                  
                 logger.info("stop recording video {} and release camera".format(identifier))
                 # convert to mp4 format
                 subprocess.run(["MP4Box", "-add", "{}{}".format(AUTOMATION["mediaPath"], fileNameH264), 

@@ -86,7 +86,7 @@ class App extends Component {
 		.catch(error => console.error('Error:', error))
 		.then(response => {
 			if(response) {
-				alert(response.message);
+				alert(response);
 			}
 		});
   	}

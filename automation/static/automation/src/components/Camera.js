@@ -112,7 +112,7 @@ class Camera extends Component {
 						deleteDescription: ""})} />
 				</header>
 				<section className="modal-card-body">
-					<div className="content">
+					<div className="content has-text-black">
 						<p>
 							{this.state.deleteDescription}
 						</p>
@@ -132,10 +132,10 @@ class Camera extends Component {
 				{popupContent}
 				<ul className="has-text-centered">  
 				{this.state.data.map(el => (
-					<li key={el.id} className={el.peopleDetected ? "notification is-danger" : "notification"}>
+					<li key={el.id} className={el.peopleDetected ? "notification is-danger" : "notification is-grey"}>
 					<div className="columns is-mobile">
 						<div className="column">
-							<a className=""
+							<a className="has-text-black"
 								href="#" onClick={() => this.setState({
 								popupVisible: true, 
 								popupFile: el.fileName,
@@ -144,7 +144,7 @@ class Camera extends Component {
 							</a>
 						</div>
 						<div className="column is-1">
-							<a className="delete is-medium" href="#" onClick={() => this.setState({
+							<a className="delete is-medium has-text-black" href="#" onClick={() => this.setState({
 								deleteVisible: true, 
 								deleteIdentifier: el.identifier,
 								deleteDescription: new Intl.DateTimeFormat("es-ES", dateFormat).format(Date.parse(el.dateCreated))})}></a>

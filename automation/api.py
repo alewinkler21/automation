@@ -102,7 +102,7 @@ class RecordVideo(APIView):
 
     def post(self, request, format=None):
         if Media.canRecord():
-            th = threading.Thread(target=Media.recordVideo())
+            th = threading.Thread(target=Media.recordVideo)
             th.start()
             return Response("Recording started", status=status.HTTP_200_OK)
         else:

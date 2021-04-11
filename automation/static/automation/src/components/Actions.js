@@ -60,8 +60,8 @@ class Buttons extends Component {
 	  }
 	  return <ul className="has-text-centered">  
 	  {this.state.data.map(el => (
-			  <li key={el.id} className={el.status ? "notification is-success" : "notification is-grey"}>
-	  		  <button className={el.status ? "button is-light" : "button is-grey"} key={el.id} onClick={() => this.executeaction(el)}>
+			  <li key={el.id} className={el.status ? "notification is-turned-on" : "notification"}>
+	  		  <button className="button" key={el.id} onClick={() => this.executeaction(el)}>
 	  		  {el.description}
 	  		  </button>
 	  		  </li>

@@ -2,10 +2,20 @@
 @import "bulma-0.8.0/sass/utilities/initial-variables";
 @import "bulma-0.8.0/sass/utilities/functions";
 
-$success: #FFF35E;
-$dark: #6B5B95;
-$light: #eddf4e;
-$primary: #39B346;
+/* lights */
+$turned-on: #FEE467;
+$turned-on-invert: findColorInvert($turned-on);
+
+$primary: #1A3B88;
+$dark: #0E2B6F;
+$light: #33529B;
+$black: #363636;
+
+@import "bulma-0.8.0/sass/utilities/derived-variables";
+$addColors: (
+  "turned-on":($turned-on, $turned-on-invert)
+);
+$colors: map-merge($colors, $addColors);
 
 @import "bulma-0.8.0/bulma";
 
@@ -15,12 +25,13 @@ $primary: #39B346;
 
 body {
 	height: 100vh;
-	background: $dark;
-	color: #fff;
+	background: $primary;
+	color: $white;
 }
 
 .modal-card-foot {
 	justify-content: flex-end;
+	padding: 10px;
 }
 
 .modal-card-title {
@@ -32,5 +43,5 @@ body {
 }
 
 .navbar-menu {
-	background: $dark;
+	background: $primary;
 }
