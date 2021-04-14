@@ -3,16 +3,14 @@ import PropTypes from "prop-types";
 import key from "weak-key";
 import ReactPaginate from 'react-paginate';
 import DeleteVideo from "./DeleteVideo";
+import ShowVideo from "./ShowVideo";
 
 class Camera extends Component {
 	state = {
 			data: [],
+			video: null,
 			showVideo: false,
-			videoFile: "",
-			videoTitle: "",
 			showDelete: false,
-			deleteIdentifier: "",
-			deleteDescription: "",
 			fetching: false,
 			delay: 5000,
 			offset: 0,
@@ -47,25 +45,6 @@ class Camera extends Component {
 			});
 	}
 	
-	popupVideo() {
-		return <div className="modal is-active">
-		<div className="modal-background" />
-			<div className="modal-card">
-			<header className="modal-card-head">
-				<p className="modal-card-title">{this.state.videoTitle}</p>
-				<button className="delete" onClick={() => this.hideVideo()} />
-			</header>
-			<section className="modal-card-body">
-				<div className="content">
-					<video width="720" height="480" controls>
-						<source src={"camera/" + this.state.videoFile} type="video/mp4" />
-					</video>
-				</div>
-			</section>
-			</div>
-		</div>;
-	}
-
 	paginationControls() {
 		return <div>
         <ReactPaginate
@@ -84,38 +63,33 @@ class Camera extends Component {
 	
 	showVideo(video) {
 		this.setState({
-			showVideo: true, 
-			videoFile: video.fileName,
-			videoTitle: this.videoDescription(video)})
+			video: video,
+			showVideo: true})
 	}
 	
 	hideVideo() {
 		this.setState({
-			showVideo: false, 
-			videoFile: "", 
-			videoTitle: ""})
+			video: null,
+			showVideo: false})
 	}
 	
 	showDeleteVideo(video) {
 		this.setState({
-			showDelete: true, 
-			deleteIdentifier: video.identifier,
-			deleteDescription: this.videoDescription(video)})
+			video: video,
+			showDelete: true})
 	}
 	
 	hideDeleteVideo() {
 		this.setState({
-			showDelete: false, 
-			deleteIdentifier: "", 
-			deleteDescription: ""})
+			video: null,
+			showDelete: false})
 	}
 	
 	updateVideosList() {
 		var filterDeletedVideo = this.state.data.filter(video => video.identifier != this.state.deleteIdentifier);
 		this.setState({
-			showDelete: false, 
-			deleteIdentifier: "", 
-			deleteDescription: "",
+			video: null,
+			showDelete: false,
 			data: filterDeletedVideo})
 	}
 
@@ -126,14 +100,15 @@ class Camera extends Component {
 		return new Intl.DateTimeFormat("es-ES", dateFormat).format(Date.parse(video.dateCreated));
 	}
 	
-	getPopupToShow() {
+	popUp() {
 		var popup;
 		if (this.state.showVideo) {
-			popup = this.popupVideo();
+			popup = <ShowVideo 
+						video = {this.state.video}
+						close = {() => this.hideVideo()} />
 		} else if (this.state.showDelete) {
 			popup = <DeleteVideo
-						identifier = {this.state.deleteIdentifier}
-						description =  {this.state.deleteDescription}
+						video = {this.state.video}
 						cancel = {() => this.hideDeleteVideo()}
 						confirm = {() => this.updateVideosList()} />
 		}
@@ -145,7 +120,7 @@ class Camera extends Component {
 			return (<div className="has-text-centered">No hay archivos multimedia</div>);
 		}
 
-		var popup = this.getPopupToShow();
+		var popup = this.popUp();
 		var pag = this.paginationControls();
 
 		var lastVideo = this.state.data[0];

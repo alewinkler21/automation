@@ -26,6 +26,7 @@ $colors: map-merge($colors, $addColors);
 body {
 	height: 100vh;
 	background: $primary;
+	background-size: cover;
 	color: $white;
 }
 

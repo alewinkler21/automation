@@ -1,38 +1,38 @@
-# import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 import time
 import logger
 
-# GPIO.setmode(GPIO.BCM)
-# GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
 
 def toggle(status, pin):
-#     GPIO.setup(pin, GPIO.OUT)
+    GPIO.setup(pin, GPIO.OUT)
     if status:
-        print ("status: {0}, pinNumber: {1}".format("status", pin))
-#         GPIO.output(pin, GPIO.HIGH)
+#         print ("status: {0}, pinNumber: {1}".format("status", pin))
+        GPIO.output(pin, GPIO.HIGH)
     else:
-        print( "status: {0}, pinNumber: {1}".format("off", pin))
-#         GPIO.output(pin, GPIO.LOW)
+#         print( "status: {0}, pinNumber: {1}".format("off", pin))
+        GPIO.output(pin, GPIO.LOW)
 
 def configurePinAsInput(pin):
     # set the pin as output and value to off 
-#     GPIO.setup(pin, GPIO.OUT)
-#     GPIO.output(pin, GPIO.LOW)
+    GPIO.setup(pin, GPIO.OUT)
+    GPIO.output(pin, GPIO.LOW)
     time.sleep(0.1)
     # change the pin back to input
-#     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 def initButton(button, fn):
     configurePinAsInput(button.pin)
     # subscribe to rising event
-#     GPIO.add_event_detect(button.pin, GPIO.RISING, callback=lambda x: fn(button), bouncetime=500)
+    GPIO.add_event_detect(button.pin, GPIO.RISING, callback=lambda x: fn(button), bouncetime=500)
 
 def initSensor(sensor):
     configurePinAsInput(sensor.pin)
     
 def readSensorValue(sensor):
-    return False
-#     return GPIO.input(sensor.pin) == GPIO.HIGH
+#     return False
+    return GPIO.input(sensor.pin) == GPIO.HIGH
 
 def timeToHigh(sensor):
     configurePinAsInput(sensor.pin)
@@ -50,5 +50,5 @@ def timeToHigh(sensor):
     return count
 
 def cleanUp():
-    pass
-#     GPIO.cleanup()
+#     pass
+    GPIO.cleanup()

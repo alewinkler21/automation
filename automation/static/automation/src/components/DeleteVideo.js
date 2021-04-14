@@ -3,14 +3,12 @@ import PropTypes from "prop-types";
 
 class DeleteVideo extends Component {
 	static propTypes = {
-		identifier: PropTypes.string.isRequired,
-		description: PropTypes.string.isRequired,
+		video: PropTypes.object.isRequired,
 		cancel: PropTypes.func.isRequired,
 		confirm: PropTypes.func.isRequired
 	};
 	state = {
-			identifier: this.props.identifier,
-			description: this.props.description
+			video: this.props.video
 			};
 
 	deleteMedia = () => {
@@ -25,7 +23,7 @@ class DeleteVideo extends Component {
 		
 		fetch(url, {
 			method: 'POST',
-			body: JSON.stringify(this.state.identifier),
+			body: JSON.stringify(this.state.video.identifier),
 			headers:{
 				'Content-Type': 'application/json',
 				'X-CSRFToken': csrftoken
@@ -42,6 +40,13 @@ class DeleteVideo extends Component {
 			}
 		});	
 	}
+	
+	videoDescription() {
+		var dateFormat = {year: 'numeric', month: 'numeric', day: 'numeric', 
+				hour: 'numeric', minute: 'numeric', second: 'numeric', 
+				hour12: false, weekday: 'long'};
+		return new Intl.DateTimeFormat("es-ES", dateFormat).format(Date.parse(this.state.video.dateCreated));
+	}
 	  
 	render() {
 		return <div className="modal is-active">
@@ -56,7 +61,7 @@ class DeleteVideo extends Component {
 					<section className="modal-card-body">
 						<div className="content has-text-black">
 							<p>
-								{this.state.description}
+								{this.videoDescription()}
 							</p>
 						</div>
 					</section>

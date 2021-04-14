@@ -9648,6 +9648,7 @@ label.panel-block:hover {
 body {
   height: 100vh;
   background: #1A3B88;
+  background-size: cover;
   color: white;
 }
 
