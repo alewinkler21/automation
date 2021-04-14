@@ -11,7 +11,7 @@ import os
 import sys
 import requests
 from raspberry.settings import TIME_ZONE, AUTOMATION
-from picamera import PiCamera, PiCameraMMALError
+# from picamera import PiCamera, PiCameraMMALError
 
 r = redis.Redis(host='127.0.0.1', port=6379, db=0)
     
@@ -286,30 +286,30 @@ class Media(models.Model):
         fileNameH264 = "{}.h264".format(identifier)
         fileNameMP4 = "{}.mp4".format(identifier)
         duration = duration or AUTOMATION["onDemandVideoDuration"]
-                        
-        with PiCamera() as camera:
-            try:
-                logger.info("start recording video {}".format(identifier))
-                  
-                Media.setRecordingFlag(identifier, duration)
-                  
-                camera.start_recording("{}{}".format(AUTOMATION["mediaPath"], fileNameH264))
-                camera.wait_recording(duration)
-                camera.stop_recording()
-                  
-                logger.info("stop recording video {} and release camera".format(identifier))
-                # convert to mp4 format
-                subprocess.run(["MP4Box", "-add", "{}{}".format(AUTOMATION["mediaPath"], fileNameH264), 
-                                "{}{}".format(AUTOMATION["mediaPath"], fileNameMP4)], stdout=subprocess.DEVNULL)
-                # save media               
-                media = Media()
-                media.identifier = identifier
-                media.type = "video"
-                media.fileName = fileNameMP4 
-                media.save()
-                # remove H264 file
-                os.remove("{}{}".format(AUTOMATION["mediaPath"], fileNameH264))
-            except PiCameraMMALError as error:
-                logger.error(error)
-            except:
-                logger.error("Unexpected error:{}".format(sys.exc_info()[0]))
+
+#         with PiCamera() as camera:
+#             try:
+#                 logger.info("start recording video {}".format(identifier))
+#                    
+#                 Media.setRecordingFlag(identifier, duration)
+#                    
+#                 camera.start_recording("{}{}".format(AUTOMATION["mediaPath"], fileNameH264))
+#                 camera.wait_recording(duration)
+#                 camera.stop_recording()
+#                    
+#                 logger.info("stop recording video {} and release camera".format(identifier))
+#                 # convert to mp4 format
+#                 subprocess.run(["MP4Box", "-add", "{}{}".format(AUTOMATION["mediaPath"], fileNameH264), 
+#                                 "{}{}".format(AUTOMATION["mediaPath"], fileNameMP4)], stdout=subprocess.DEVNULL)
+#                 # save media               
+#                 media = Media()
+#                 media.identifier = identifier
+#                 media.type = "video"
+#                 media.fileName = fileNameMP4 
+#                 media.save()
+#                 # remove H264 file
+#                 os.remove("{}{}".format(AUTOMATION["mediaPath"], fileNameH264))
+#             except PiCameraMMALError as error:
+#                 logger.error(error)
+#             except:
+#                 logger.error("Unexpected error:{}".format(sys.exc_info()[0]))

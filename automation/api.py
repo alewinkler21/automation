@@ -1,4 +1,5 @@
 from django.http import HttpResponse
+from django.core.paginator import Paginator
 
 from rest_framework import authentication, permissions, status
 from rest_framework.renderers import JSONRenderer
@@ -78,7 +79,9 @@ class GetMedia(APIView):
  
     def get(self, format=None):
         media = Media.objects.filter(type='video').order_by('-dateCreated')
-        serializer = MediaSerializer(media, many=True)
+        paginator = Paginator(media, 5)
+        page = paginator.get_page(1)
+        serializer = MediaSerializer(page, many=True)
         
         return JSONResponse(serializer.data)
     
