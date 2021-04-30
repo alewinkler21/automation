@@ -14,8 +14,8 @@ class Camera extends Component {
 			fetching: false,
 			delay: 5000,
 			offset: 0,
-		      perPage: 5,
-		      currentPage: 0};
+		      perPage: 2,
+		      currentPage: 1};
 
 	componentDidMount() {
 		this.fetchData();
@@ -46,19 +46,25 @@ class Camera extends Component {
 	}
 	
 	paginationControls() {
-		return <div>
-        <ReactPaginate
-            previousLabel={"prev"}
-            nextLabel={"next"}
-            breakLabel={"..."}
-            breakClassName={"break-me"}
-            pageCount={this.state.pageCount}
-            marginPagesDisplayed={2}
-            pageRangeDisplayed={5}
-            containerClassName={"pagination"}
-            subContainerClassName={"pages pagination"}
-            activeClassName={"active"}/>
-        </div>;
+		return <div className="pagination">
+		        <ReactPaginate
+			        breakClassName={''}
+			        breakLinkClassName={'has-text-white'}
+			        containerClassName={'pagination-list'}
+			        pageClassName={'pagination-link'}
+			        pageLinkClassName={'has-text-white'}
+			        previousClassName={'pagination-previous'}
+			        previousLinkClassName={'has-text-white'}
+			        nextClassName={'pagination-next'}
+			        nextLinkClassName={'has-text-white'}
+			        activeClassName={'is-current'}
+		            previousLabel={"<"}
+		            nextLabel={">"}
+		            breakLabel={"..."}
+		            pageCount={this.state.pageCount}
+		            marginPagesDisplayed={2}
+		            pageRangeDisplayed={5}/>
+		        </div>;
 	}
 	
 	showVideo(video) {
@@ -135,7 +141,7 @@ class Camera extends Component {
 				<p>Detecciones</p>
 				<ul className="has-text-centered">  
 				{this.state.data.map(video => (
-					<li key={video.id} className={video.peopleDetected ? "notification has-text-black is-danger" : "notification has-text-black is-grey"}>
+					<li key={video.id} className={video.classification == "person" ? "notification has-text-black is-danger" : "notification has-text-black is-grey"}>
 					<div className="columns is-mobile">
 						<div className="column">
 							<a href="#" onClick={() => this.showVideo(video)}>

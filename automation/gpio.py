@@ -1,6 +1,6 @@
 import RPi.GPIO as GPIO
 import time
-import logger
+from automation import logger
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)

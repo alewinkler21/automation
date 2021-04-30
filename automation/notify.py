@@ -1,4 +1,4 @@
-import logger as logger
+from automation import logger as logger
 import requests
 
 baseURL = "https://api.plivo.com/v1"

@@ -5,8 +5,7 @@ from rest_framework import authentication, permissions, status
 from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 from rest_framework.response import Response
-import logger
-import threading
+from automation import logger
 import os
 
 from automation.models import Action, Alarm, Media
@@ -78,7 +77,7 @@ class GetMedia(APIView):
     permission_classes = (permissions.IsAuthenticated,)
  
     def get(self, format=None):
-        media = Media.objects.filter(type='video').order_by('-dateCreated')
+        media = Media.objects.filter(classification__in=['person']).order_by('-dateCreated')
         paginator = Paginator(media, 5)
         page = paginator.get_page(1)
         serializer = MediaSerializer(page, many=True)
@@ -98,15 +97,3 @@ class DeleteMedia(APIView):
         [self.__deleteMedia(media, AUTOMATION['mediaPath']) for media in Media.objects.filter(identifier=identifier)]
         
         return Response(identifier, status=status.HTTP_200_OK)
-
-class RecordVideo(APIView):
-    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication)
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def post(self, request, format=None):
-        if Media.canRecord():
-            th = threading.Thread(target=Media.recordVideo)
-            th.start()
-            return Response("Recording started", status=status.HTTP_200_OK)
-        else:
-            return Response("There is already a recording started", status=status.HTTP_400_BAD_REQUEST)

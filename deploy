@@ -1,7 +1,6 @@
 #!/bin/bash
 
 scp manage.py raspberry2:/opt/houseremote
-scp logger.py raspberry2:/opt/houseremote
 scp automation/management/commands/daemons.py raspberry2:/opt/houseremote/automation/management/commands
 scp automation/management/commands/initdata.py raspberry2:/opt/houseremote/automation/management/commands
 scp automation/static/automation/css/style.css raspberry2:/opt/houseremote/static/automation/css
@@ -10,6 +9,7 @@ scp automation/static/automation/js/main.js raspberry2:/opt/houseremote/static/a
 scp automation/static/automation/images/favicon.ico raspberry2:/opt/houseremote/static/automation/images
 scp automation/templates/registration/login.html raspberry2:/opt/houseremote/automation/templates/registration
 scp automation/templates/automation/index.html raspberry2:/opt/houseremote/automation/templates/automation
+scp automation/logger.py raspberry2:/opt/houseremote/automation
 scp automation/admin.py raspberry2:/opt/houseremote/automation
 scp automation/api.py raspberry2:/opt/houseremote/automation
 scp automation/apps.py raspberry2:/opt/houseremote/automation

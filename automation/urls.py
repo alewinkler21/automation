@@ -10,12 +10,10 @@ urlpatterns = [
     url(r'^$', login_required(TemplateView.as_view(template_name='automation/index.html'))),
     url(r'^accounts/login/$', auth_views.LoginView.as_view(), name='login'),
     url(r'^logout/$', auth_views.LogoutView.as_view(),{'next_page': '/accounts/login'}),
-#     url(r'^groups/$', api.ListGroups.as_view(), name='groups'),
     url(r'^actions/$', api.GetActions.as_view(), name='actions'),
     url(r'^executeaction/$', api.ExecuteAction.as_view(), name='executeaction'),
     url(r'^togglealarm/$', api.ToggleAlarm.as_view(), name='togglealarm'),
     url(r'^alarm/$', api.GetAlarm.as_view(), name='alarm'),
     url(r'^media/$', api.GetMedia.as_view(), name='media'),
-    url(r'^deletemedia/$', api.DeleteMedia.as_view(), name='deletemedia'),
-    url(r'^recordvideo/$', api.RecordVideo.as_view(), name='recordvideo')
+    url(r'^deletemedia/$', api.DeleteMedia.as_view(), name='deletemedia')
 ]

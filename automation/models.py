@@ -4,14 +4,9 @@ import pytz
 from datetime import datetime, timedelta
 from automation.gpio import toggle
 import redis
-import logger
-import uuid
-import subprocess
-import os
-import sys
+from automation import logger
 import requests
-from raspberry.settings import TIME_ZONE, AUTOMATION
-from picamera import PiCamera, PiCameraMMALError
+from raspberry.settings import TIME_ZONE
 
 r = redis.Redis(host='127.0.0.1', port=6379, db=0)
     
@@ -221,10 +216,10 @@ class LightSensor(Actionable):
                 logger.warning(e)
 
 class PIRSensor(Actionable):
-    durationLong = models.IntegerField();
     durationShort = models.IntegerField();
-    longTimeEnd = models.TimeField()
+    durationLong = models.IntegerField();
     longTimeStart = models.TimeField()
+    longTimeEnd = models.TimeField()
     pin = models.IntegerField();
 
     def __str__(self):
@@ -258,58 +253,8 @@ class Alarm(models.Model):
         get_latest_by = 'date'
         
 class Media(models.Model):
+    classification = models.CharField(max_length=20, null=True, blank=True)
     dateCreated = models.DateTimeField('date created', auto_now_add=True)
     fileName = models.CharField(max_length=50)
     identifier = models.CharField(max_length=50)
-    peopleDetected = models.BooleanField(default=False)
-    triggeredByAlarm = models.BooleanField(default=False)
-    type = models.CharField(max_length=5)
-    
-    @staticmethod
-    def recordingFlag():
-        return "recording"
-        
-    @staticmethod
-    def canRecord():
-        return r.get(Media.recordingFlag()) is None
-    
-    @staticmethod
-    def setRecordingFlag(identifier, duration):
-        key = Media.recordingFlag()
-        r.set(key, identifier)
-        r.expire(key, duration)
-        logger.info("set recording flag for {}, duration {} seconds".format(identifier, duration))
 
-    @staticmethod
-    def recordVideo(duration=None):
-        identifier = uuid.uuid1().hex
-        fileNameH264 = "{}.h264".format(identifier)
-        fileNameMP4 = "{}.mp4".format(identifier)
-        duration = duration or AUTOMATION["onDemandVideoDuration"]
-
-        with PiCamera() as camera:
-            try:
-                logger.info("start recording video {}".format(identifier))
-                    
-                Media.setRecordingFlag(identifier, duration)
-                    
-                camera.start_recording("{}{}".format(AUTOMATION["mediaPath"], fileNameH264))
-                camera.wait_recording(duration)
-                camera.stop_recording()
-                    
-                logger.info("stop recording video {} and release camera".format(identifier))
-                # convert to mp4 format
-                subprocess.run(["MP4Box", "-add", "{}{}".format(AUTOMATION["mediaPath"], fileNameH264), 
-                                "{}{}".format(AUTOMATION["mediaPath"], fileNameMP4)], stdout=subprocess.DEVNULL)
-                # save media               
-                media = Media()
-                media.identifier = identifier
-                media.type = "video"
-                media.fileName = fileNameMP4 
-                media.save()
-                # remove H264 file
-                os.remove("{}{}".format(AUTOMATION["mediaPath"], fileNameH264))
-            except PiCameraMMALError as error:
-                logger.error(error)
-            except:
-                logger.error("Unexpected error:{}".format(sys.exc_info()[0]))

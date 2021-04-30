@@ -130,5 +130,6 @@ AUTOMATION = {
     'address': '127.0.0.1',
     'identifier': 'notebook',
     'mediaPath': '/var/www/html/camera/',
-    'onDemandVideoDuration': 15
+    'videoDuration': 15,
+    'modelsPath': '/opt/houseremote/'
 }
