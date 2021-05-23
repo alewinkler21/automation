@@ -28,7 +28,7 @@ class ShowVideo extends Component {
 			<section className="modal-card-body">
 				<div className="content">
 					<video width="720" height="480" controls>
-						<source src={"camera/" + this.state.video.fileName} type="video/mp4" />
+						<source src={"camera/" + this.state.video.videoFile} type="video/mp4" />
 					</video>
 				</div>
 			</section>

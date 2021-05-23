@@ -23,7 +23,7 @@ class DeleteVideo extends Component {
 		
 		fetch(url, {
 			method: 'POST',
-			body: JSON.stringify(this.state.video.identifier),
+			body: JSON.stringify(this.state.video.id),
 			headers:{
 				'Content-Type': 'application/json',
 				'X-CSRFToken': csrftoken

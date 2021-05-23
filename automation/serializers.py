@@ -20,4 +20,4 @@ class AlarmSerializer(serializers.ModelSerializer):
 class MediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Media
-        fields = ('id', 'identifier', 'dateCreated', 'fileName', 'classification')
+        fields = ('id', 'dateCreated', 'videoFile', 'thumbnail', 'classification')

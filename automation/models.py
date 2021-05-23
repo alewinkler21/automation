@@ -255,6 +255,8 @@ class Alarm(models.Model):
 class Media(models.Model):
     classification = models.CharField(max_length=20, null=True, blank=True)
     dateCreated = models.DateTimeField('date created', auto_now_add=True)
-    fileName = models.CharField(max_length=50)
-    identifier = models.CharField(max_length=50)
-
+    videoFile = models.CharField(max_length=50)
+    thumbnail = models.CharField(max_length=50)
+    
+    class Meta:
+        get_latest_by = 'dateCreated'

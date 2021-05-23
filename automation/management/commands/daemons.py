@@ -146,7 +146,7 @@ def startActionsTimer():
     logger.info("Actions timer initiated")
 
 class VideoAnalysis(Thread):
-    thr = 0.8
+    thr = 0.4
     net = cv2.dnn.readNetFromCaffe("{}{}".format(AUTOMATION["modelsPath"], "MobileNetSSD_deploy.prototxt"), 
                                    "{}{}".format(AUTOMATION["modelsPath"], "MobileNetSSD_deploy.caffemodel"))
     classNames = {0: 'background',
@@ -170,20 +170,20 @@ class VideoAnalysis(Thread):
                     logger.error("Video not found in database")
                 r.srem("videos", vid)
                 if media is not None:
-                    logger.info("Analyzing {}".format(media.fileName))                        
+                    logger.info("Analyzing {}".format(media.videoFile))                        
                     start = datetime.now()
                     
                     self.__classify(media)
                     
                     end = datetime.now()
                     logger.info("Video analysis duration {}s".format((end - start).total_seconds()))
-            time.sleep(1)
+            time.sleep(0.1)
 
     def __classify(self, media):
-        cap = cv2.VideoCapture("{}{}".format(AUTOMATION["mediaPath"], media.fileName))
+        cap = cv2.VideoCapture("{}{}".format(AUTOMATION["mediaPath"], media.videoFile))
+        framesCounter = 0
+        framesAnalyzed = 0
         if cap.isOpened():
-            framesCounter = 0
-            framesAnalyzed = 0
             # Read until video is completed or people is detected
             while media.classification is None:
                 # Capture frame-by-frame
@@ -194,13 +194,16 @@ class VideoAnalysis(Thread):
                         continue
                     framesAnalyzed += 1
                     # Resizing the Image
-                    cvImage = cv2.resize(frame, (300, 300))  # resize frame for prediction
+                    cvImage = cv2.resize(frame, (360, 240))  # resize frame for prediction
                     # create blob
-                    blob = cv2.dnn.blobFromImage(cvImage, 0.007843, (300, 300), (127.5, 127.5, 127.5), False)
+                    blob = cv2.dnn.blobFromImage(cvImage, 0.007843, (360, 240), (127.5, 127.5, 127.5), False)
                     # Set to network the input blob
                     VideoAnalysis.net.setInput(blob)
                     # Prediction of network
                     detections = VideoAnalysis.net.forward()
+                    # Size of frame resize (300x300)
+                    cols = cvImage.shape[1]
+                    rows = cvImage.shape[0]
                     # For get the class and location of object detected,
                     # There is a fix index for class, location and confidence
                     # value in @detections array .
@@ -213,15 +216,29 @@ class VideoAnalysis(Thread):
                                 or VideoAnalysis.classNames[classId] == "horse"
                                 or VideoAnalysis.classNames[classId] == "sheep"):
                                 
-                                logger.info("Confidence passed detected: {}:{} in {}".format(VideoAnalysis.classNames[classId], confidence, media.fileName))
+                                logger.info("Confidence passed detected: {}:{} in {}".format(VideoAnalysis.classNames[classId], confidence, media.videoFile))
 
-                                fileNameH264 = media.fileName
-                                fileNameMP4 = fileNameH264.replace("h264", "mp4")
-                                # convert to mp4 and delete h264 file
-                                subprocess.run(["MP4Box", "-add", fileNameH264, fileNameMP4], stdout=subprocess.DEVNULL)
-                                os.remove("{}{}".format(AUTOMATION["mediaPath"], fileNameH264))
+                                # Object location
+                                xLeftBottom = int(detections[0, 0, i, 3] * cols)
+                                yLeftBottom = int(detections[0, 0, i, 4] * rows)
+                                xRightTop = int(detections[0, 0, i, 5] * cols)
+                                yRightTop = int(detections[0, 0, i, 6] * rows)
+    
+                                # Factor for scale to original size of frame
+                                heightFactor = frame.shape[0] / 240.0
+                                widthFactor = frame.shape[1] / 360.0
+                                # Scale object detection to frame
+                                xLeftBottom = int(widthFactor * xLeftBottom)
+                                yLeftBottom = int(heightFactor * yLeftBottom)
+                                xRightTop = int(widthFactor * xRightTop)
+                                yRightTop = int(heightFactor * yRightTop)
+                                # Draw location of object
+                                cv2.rectangle(frame, (xLeftBottom, yLeftBottom), (xRightTop, yRightTop), (255, 0, 0))
+                                # save thumbnail
+                                thumbnail = media.videoFile.replace("mp4", "jpg")
+                                cv2.imwrite("{}{}".format(AUTOMATION["mediaPath"], thumbnail), frame)
                                 # update media
-                                media.fileName = fileNameMP4
+                                media.thumbnail = thumbnail
                                 media.classification = VideoAnalysis.classNames[classId]
                                 media.save()
                                 
@@ -235,27 +252,26 @@ class VideoAnalysis(Thread):
         cv2.destroyAllWindows()
         
         logger.info("Frames analyzed:{}. Classification:{}".format(framesAnalyzed, media.classification))
-        # delete useless file and data
-        if media.classification is None:
-            logger.info("Delete {}".format(media.fileName))
-            os.remove("{}{}".format(AUTOMATION["mediaPath"], media.fileName))
-            media.delete()
 
 def startRecordingVideo():
     logger.info("Recording video initiated")
     with PiCamera() as camera:
         while True:
                 try:
-                    identifier = uuid.uuid1().hex
-                    fileName = "{}.h264".format(identifier)
+                    uniqueId = uuid.uuid1().hex
+                    videoFile = "{}.h264".format(uniqueId)
                     # record video
-                    camera.start_recording("{}{}".format(AUTOMATION["mediaPath"], fileName))
+                    camera.start_recording("{}{}".format(AUTOMATION["mediaPath"], videoFile))
                     camera.wait_recording(AUTOMATION["videoDuration"])
                     camera.stop_recording()
+                    # convert to mp4 and delete h264 file
+                    MP4file = videoFile.replace("h264", "mp4")
+                    subprocess.run(["MP4Box", "-quiet", "-add", "{}{}".format(AUTOMATION["mediaPath"], videoFile), 
+                                    "{}{}".format(AUTOMATION["mediaPath"], MP4file)], stdout=subprocess.DEVNULL)
+                    os.remove("{}{}".format(AUTOMATION["mediaPath"], videoFile))
                     # save metadata
                     media = Media()
-                    media.fileName = fileName
-                    media.identifier = identifier
+                    media.videoFile = MP4file
                     media.save()
                     # put media in analyzer queue
                     r.sadd("videos", media.id)

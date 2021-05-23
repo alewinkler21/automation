@@ -92,7 +92,7 @@ class Camera extends Component {
 	}
 	
 	updateVideosList() {
-		var filterDeletedVideo = this.state.data.filter(video => video.identifier != this.state.deleteIdentifier);
+		var filterDeletedVideo = this.state.data.filter(video => video.id != this.state.video.id);
 		this.setState({
 			video: null,
 			showDelete: false,
@@ -134,7 +134,7 @@ class Camera extends Component {
 		
 		return <div>
 				{popup}
-				<div className="notification has-text-black">
+				<div className="notification has-text-black"videoDescription>
 					<p>Situación actual</p>
 					{currentSituation}
 				</div>
