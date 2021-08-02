@@ -15,5 +15,6 @@ urlpatterns = [
     url(r'^togglealarm/$', api.ToggleAlarm.as_view(), name='togglealarm'),
     url(r'^alarm/$', api.GetAlarm.as_view(), name='alarm'),
     url(r'^media/$', api.GetMedia.as_view(), name='media'),
-    url(r'^deletemedia/$', api.DeleteMedia.as_view(), name='deletemedia')
+    url(r'^deletemedia/$', api.DeleteMedia.as_view(), name='deletemedia'),
+    url(r'^playmusic/$', api.PlayMusic.as_view(), name='playmusic')
 ]

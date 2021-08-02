@@ -6,12 +6,15 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from automation import logger
-import os
+from os import remove
+import redis
 
 from automation.models import Action, Alarm, Media
 from automation.serializers import ActionSerializer, ActionHistorySerializer, AlarmSerializer, MediaSerializer
 
 from raspberry.settings import AUTOMATION
+
+r = redis.Redis(host='127.0.0.1', port=6379, db=0)
 
 class JSONResponse(HttpResponse):
     def __init__(self, data, **kwargs):
@@ -77,7 +80,8 @@ class GetMedia(APIView):
     permission_classes = (permissions.IsAuthenticated,)
  
     def get(self, format=None):
-        media = Media.objects.filter(classification__isnull=False).order_by('-dateCreated')
+        #media = Media.objects.filter(classification__isnull=False).order_by('-dateCreated')
+        media = Media.objects.filter(movementDetected=True).order_by('-dateCreated')
 #         paginator = Paginator(media, 5)
 #         page = paginator.get_page(1)
 #         serializer = MediaSerializer(page, many=True)
@@ -91,8 +95,8 @@ class DeleteMedia(APIView):
  
     def __deleteMedia(self, media):
         media.delete()
-        os.remove("{}{}".format(AUTOMATION['mediaPath'], media.videoFile))
-        os.remove("{}{}".format(AUTOMATION['mediaPath'], media.thumbnail))
+        remove("{}{}".format(AUTOMATION['mediaPath'], media.videoFile))
+        remove("{}{}".format(AUTOMATION['mediaPath'], media.thumbnail))
 
     def post(self, request, format=None):
         media = Media.objects.get(id=request.data)
@@ -100,3 +104,20 @@ class DeleteMedia(APIView):
             self.__deleteMedia(media)
             
         return Response(request.data, status=status.HTTP_200_OK)
+    
+class PlayMusic(APIView):
+    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication)
+    permission_classes = (permissions.IsAuthenticated,)
+    
+    def __continuePlaying(self):
+        playMusic = r.get("play.music")
+        if playMusic is None:
+            return False
+        else:
+            return bool(playMusic)
+        
+    def post(self, request, format=None):
+        playMusic = not self.__continuePlaying()
+        r.set("play.music", bytes(playMusic))
+
+        return JSONResponse(playMusic)

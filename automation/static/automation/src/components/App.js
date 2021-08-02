@@ -20,6 +20,38 @@ class App extends Component {
     	this.setState({screen: screen});
     };
 	
+    playmusic() {
+		var url = 'playmusic/';
+		
+		var data = '';
+
+		const value = '; ' + document.cookie;
+		const parts = value.split('; ' + 'csrftoken' + '=');
+		
+		if (parts.length == 2) {
+			var csrftoken = parts.pop().split(";").shift();
+		}
+		
+		fetch(url, {
+			method: 'POST',
+			body: JSON.stringify(data),
+			headers:{
+				'Content-Type': 'application/json',
+				'X-CSRFToken': csrftoken
+			}
+		}).then(res => {
+			if (res.ok) 
+				return res.json();
+			else
+				throw new Error(res.status + ' ' + res.statusText);})
+		.catch(error => console.error('Error:', error))
+		.then(response => {
+			if(response) {
+				console.info(response);
+			}
+		});
+	}
+	
 	toggleAlarm() {
 		var url = 'togglealarm/';
 		
@@ -123,14 +155,9 @@ class App extends Component {
 								<i className="fas fa-lg fa-file-video"></i>
 							</span> 
 						</button>
-						<button className={this.state.alarmArmed ? "button is-large is-danger" : "button is-large is-dark"} href="#" onClick={() => this.toggleAlarm()}>
+						<button className={this.state.alarmArmed ? "button is-large is-danger" : "button is-large is-dark"} href="#" onClick={() => this.playmusic()}>
 							<span className="icon is-medium"> 
-								<i className="fas fa-lg fa-volume-up"></i> 
-							</span> 
-						</button>
-						<button className="button is-large is-dark" href="#" onClick={() => this.recordVideo()}>
-							<span className="icon is-medium"> 
-								<i className="fas fa-lg fa-video"></i> 
+								<i className="fas fa-lg fa-music"></i> 
 							</span> 
 						</button>
 						<button className="button is-large is-dark" href="#" onClick={() => window.location.href = "/admin"}>

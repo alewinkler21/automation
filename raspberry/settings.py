@@ -131,5 +131,6 @@ AUTOMATION = {
     'identifier': 'notebook',
     'mediaPath': '/var/www/html/camera/',
     'videoDuration': 15,
-    'modelsPath': '/opt/houseremote/'
+    'modelsPath': '/opt/houseremote/',
+    'musicPath': '/opt/houseremote/music/'
 }

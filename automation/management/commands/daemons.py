@@ -13,7 +13,9 @@ import uuid
 import cv2
 from datetime import datetime
 import subprocess
-import os
+from os import listdir, remove
+from os.path import isfile, join
+import random
 
 r = redis.Redis(host='127.0.0.1', port=6379, db=0)
 
@@ -146,7 +148,7 @@ def startActionsTimer():
     logger.info("Actions timer initiated")
 
 class VideoAnalysis(Thread):
-    thr = 0.4
+    thr = 0.8
     net = cv2.dnn.readNetFromCaffe("{}{}".format(AUTOMATION["modelsPath"], "MobileNetSSD_deploy.prototxt"), 
                                    "{}{}".format(AUTOMATION["modelsPath"], "MobileNetSSD_deploy.caffemodel"))
     classNames = {0: 'background',
@@ -173,11 +175,69 @@ class VideoAnalysis(Thread):
                     logger.info("Analyzing {}".format(media.videoFile))                        
                     start = datetime.now()
                     
-                    self.__classify(media)
+                    if self.__detectMovement(media):
+                        logger.info("Video - movement detected")
+                        #self.__classify(media)
+                    else:
+                        logger.info("Video - no movement detected")
                     
                     end = datetime.now()
                     logger.info("Video analysis duration {}s".format((end - start).total_seconds()))
-            time.sleep(0.1)
+            time.sleep(1)
+
+    def __detectMovement(self, media):
+        cap = cv2.VideoCapture("{}{}".format(AUTOMATION["mediaPath"], media.videoFile))
+        framesCounter = 0
+        framesAnalyzed = 0
+        baselineImage = None
+        statusList = [None,None]
+        if cap.isOpened():
+            # Read until video is completed or people is detected
+            while not media.movementDetected:
+                # Capture frame-by-frame
+                ret, frame = cap.read()
+                if ret == True:
+                    status=0
+                    framesCounter += 1
+                    if framesCounter % 24 != 0:
+                        continue
+                    #time.sleep(1)
+                    framesAnalyzed += 1
+                    
+                    #temp = subprocess.run(["vcgencmd", "measure_temp"], capture_output=True)
+                    #logger.info("[{}]{} frames{}".format(datetime.now(), str(temp.stdout, "UTF-8"), framesAnalyzed))
+                    
+                    #Gray conversion and noise reduction (smoothening)
+                    gray_frame = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+                    gray_frame = cv2.GaussianBlur(gray_frame,(25,25),0)
+    
+                    if baselineImage is None:
+                        baselineImage = gray_frame
+                        continue
+                    #Calculating the difference and image thresholding
+                    delta = cv2.absdiff(baselineImage,gray_frame)
+                    threshold = cv2.threshold(delta,35,255, cv2.THRESH_BINARY)[1]
+                    # Finding all the contours
+                    (contours,_) = cv2.findContours(threshold,cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+                    for contour in contours:
+                        if cv2.contourArea(contour) < 5000:
+                            continue
+                        status = 1
+                    statusList.append(status)
+                    
+                    if statusList[-1] == 1 and statusList[-2] == 0:
+                        media.movementDetected = True
+                        media.save()
+                        break
+                else:
+                    break
+        # When everything done, release the video capture object
+        cap.release()
+        # Closes all the frames
+        cv2.destroyAllWindows()
+        
+        return media.movementDetected
 
     def __classify(self, media):
         cap = cv2.VideoCapture("{}{}".format(AUTOMATION["mediaPath"], media.videoFile))
@@ -243,7 +303,7 @@ class VideoAnalysis(Thread):
                                 media.save()
                                 
                                 break
-                        time.sleep(0.1)
+                        #time.sleep(0.1)
                 else:
                     break
         # When everything done, release the video capture object
@@ -268,7 +328,7 @@ def startRecordingVideo():
                     MP4file = videoFile.replace("h264", "mp4")
                     subprocess.run(["MP4Box", "-quiet", "-add", "{}{}".format(AUTOMATION["mediaPath"], videoFile), 
                                     "{}{}".format(AUTOMATION["mediaPath"], MP4file)], stdout=subprocess.DEVNULL)
-                    os.remove("{}{}".format(AUTOMATION["mediaPath"], videoFile))
+                    remove("{}{}".format(AUTOMATION["mediaPath"], videoFile))
                     # save metadata
                     media = Media()
                     media.videoFile = MP4file
@@ -277,8 +337,10 @@ def startRecordingVideo():
                     r.sadd("videos", media.id)
                 except PiCameraMMALError as error:
                     logger.error(error)
+                    break
                 except:
                     logger.error("startRecordingVideo:Unexpected error:{}".format(sys.exc_info()[0]))
+                    break
                 time.sleep(1)
 
 def startVideoAnalysis():
@@ -286,6 +348,34 @@ def startVideoAnalysis():
     videoAnalysis.setDaemon(True)
     videoAnalysis.start()
     logger.info("Video analysis initiated")
+
+class ElevatorMusic(Thread):
+
+    def __init__(self):
+        super(ElevatorMusic, self).__init__()
+        self.musicFiles = [f for f in listdir(AUTOMATION["musicPath"]) if isfile(join(AUTOMATION["musicPath"], f))]
+
+    def __continuePlaying(self):
+        playMusic = r.get("play.music")
+        if playMusic is None:
+            return False
+        else:
+            return bool(playMusic)
+        
+    def run(self):        
+        while True:
+            if self.__continuePlaying():
+                song = random.choice(self.musicFiles)
+                if song is not None:
+                    logger.info("playing{}".format(song))
+                    subprocess.run(["omxplayer", "{}{}".format(AUTOMATION["musicPath"], song)], stdout=subprocess.DEVNULL)
+            time.sleep(1)
+
+def playElevatorMusic():
+    elevatorMusic = ElevatorMusic()
+    elevatorMusic.setDaemon(True)
+    elevatorMusic.start()
+    logger.info("Elevator music initiated")
 
 def terminateProcess(signalNumber, frame):
     logger.info("(SIGTERM) terminating the process")
@@ -296,19 +386,37 @@ class Command(BaseCommand):
     help = "Start automation daemons"
 
     def add_arguments(self, parser):
-        pass
-                    
+        parser.add_argument(
+            '--automation',
+            action='store_true',
+            help='Start automation services',
+        )
+        parser.add_argument(
+            '--camera',
+            action='store_true',
+            help='Start recording services'
+        )
+        parser.add_argument(
+            '--music',
+            action='store_true',
+            help='Start elevator music',
+        )
+                     
     def handle(self, *args, **options):
         signal.signal(signal.SIGTERM, terminateProcess)
         try:
-            initRelays()
-            initButtons()
-            initClocks()
-            initLightSensors()
-            initPIRSensors()
-            startActionsTimer()
-            startVideoAnalysis()
-            startRecordingVideo()
+            if options["music"]:
+                playElevatorMusic()
+            if options["automation"]:
+                initRelays()
+                initButtons()
+                initClocks()
+                initLightSensors()
+                initPIRSensors()
+                startActionsTimer()
+            if options["camera"]:
+                startVideoAnalysis()
+                startRecordingVideo()  
         except KeyboardInterrupt:
             gpio.cleanUp()
             sys.exit()

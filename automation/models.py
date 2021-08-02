@@ -165,8 +165,8 @@ class Clock(Actionable):
             timeEnd = (timeZone.localize(datetime.combine(now, self.timeEnd)) 
                        if self.timeEnd > self.timeStart 
                        else timeZone.localize(datetime.combine(now + timedelta(days=1), self.timeEnd)))
-            timedelta = timeEnd - now
-            duration = timedelta.days * 24 * 3600 + timedelta.seconds
+            delta = timeEnd - now
+            duration = delta.days * 24 * 3600 + delta.seconds
             # calculate status
             status = True if now >= timeStart and now < timeEnd else False
             if self.action.status != status:
@@ -254,6 +254,7 @@ class Alarm(models.Model):
         
 class Media(models.Model):
     classification = models.CharField(max_length=20, null=True, blank=True)
+    movementDetected = models.BooleanField(default=False)
     dateCreated = models.DateTimeField('date created', auto_now_add=True)
     videoFile = models.CharField(max_length=50)
     thumbnail = models.CharField(max_length=50)
