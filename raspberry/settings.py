@@ -132,5 +132,6 @@ AUTOMATION = {
     'mediaPath': '/var/www/html/camera/',
     'videoDuration': 15,
     'modelsPath': '/opt/houseremote/',
-    'musicPath': '/opt/houseremote/music/'
+    'musicPath': '/opt/houseremote/music/',
+    'redis-host': '127.0.0.1'
 }

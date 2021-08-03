@@ -8,10 +8,10 @@ GPIO.setwarnings(False)
 def toggle(status, pin):
     GPIO.setup(pin, GPIO.OUT)
     if status:
-#         print ("status: {0}, pinNumber: {1}".format("status", pin))
+#        print ("status: {0}, pinNumber: {1}".format("status", pin))
         GPIO.output(pin, GPIO.HIGH)
     else:
-#         print( "status: {0}, pinNumber: {1}".format("off", pin))
+#        print( "status: {0}, pinNumber: {1}".format("off", pin))
         GPIO.output(pin, GPIO.LOW)
 
 def configurePinAsInput(pin):
@@ -31,7 +31,7 @@ def initSensor(sensor):
     configurePinAsInput(sensor.pin)
     
 def readSensorValue(sensor):
-#     return False
+#    return False
     return GPIO.input(sensor.pin) == GPIO.HIGH
 
 def timeToHigh(sensor):
@@ -50,5 +50,5 @@ def timeToHigh(sensor):
     return count
 
 def cleanUp():
-#     pass
+#    pass
     GPIO.cleanup()

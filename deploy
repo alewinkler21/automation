@@ -15,5 +15,6 @@ scp automation/api.py esopo:/opt/houseremote/automation
 scp automation/apps.py esopo:/opt/houseremote/automation
 scp automation/gpio.py esopo:/opt/houseremote/automation
 scp automation/models.py esopo:/opt/houseremote/automation
+scp automation/redis.py esopo:/opt/houseremote/automation
 scp automation/serializers.py esopo:/opt/houseremote/automation
 scp automation/urls.py esopo:/opt/houseremote/automation

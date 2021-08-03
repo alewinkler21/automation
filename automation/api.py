@@ -7,14 +7,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from automation import logger
 from os import remove
-import redis
-
+from automation.redis import redis
+from django.db.models import Q
 from automation.models import Action, Alarm, Media
 from automation.serializers import ActionSerializer, ActionHistorySerializer, AlarmSerializer, MediaSerializer
 
 from raspberry.settings import AUTOMATION
-
-r = redis.Redis(host='127.0.0.1', port=6379, db=0)
 
 class JSONResponse(HttpResponse):
     def __init__(self, data, **kwargs):
@@ -80,8 +78,8 @@ class GetMedia(APIView):
     permission_classes = (permissions.IsAuthenticated,)
  
     def get(self, format=None):
-        #media = Media.objects.filter(classification__isnull=False).order_by('-dateCreated')
-        media = Media.objects.filter(movementDetected=True).order_by('-dateCreated')
+        last = Media.objects.last()
+        media = Media.objects.filter(Q(movementDetected=True) | Q(id=last.id)).order_by('-dateCreated')
 #         paginator = Paginator(media, 5)
 #         page = paginator.get_page(1)
 #         serializer = MediaSerializer(page, many=True)
@@ -110,7 +108,7 @@ class PlayMusic(APIView):
     permission_classes = (permissions.IsAuthenticated,)
     
     def __continuePlaying(self):
-        playMusic = r.get("play.music")
+        playMusic = redis.get("play.music")
         if playMusic is None:
             return False
         else:
@@ -118,6 +116,6 @@ class PlayMusic(APIView):
         
     def post(self, request, format=None):
         playMusic = not self.__continuePlaying()
-        r.set("play.music", bytes(playMusic))
+        redis.set("play.music", bytes(playMusic))
 
         return JSONResponse(playMusic)

@@ -129,7 +129,7 @@ class Camera extends Component {
 		var popup = this.popUp();
 		var pag = this.paginationControls();
 
-		var lastVideo = this.state.data[0];
+		var lastVideo = this.state.data.shift();
 		var currentSituation = <a href="#" onClick={() => this.showVideo(lastVideo)}>{this.videoDescription(lastVideo)}</a>;
 		
 		return <div>
@@ -141,7 +141,7 @@ class Camera extends Component {
 				<p>Detecciones</p>
 				<ul className="has-text-centered">  
 				{this.state.data.map(video => (
-					<li key={video.id} className={video.classification == "person" ? "notification has-text-black is-danger" : "notification has-text-black is-grey"}>
+					<li key={video.id} className={video.movementDetected ? "notification has-text-black is-danger" : "notification has-text-black is-grey"}>
 					<div className="columns is-mobile">
 						<div className="column">
 							<a href="#" onClick={() => this.showVideo(video)}>

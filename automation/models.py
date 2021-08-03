@@ -3,12 +3,10 @@ from django.utils import timezone
 import pytz
 from datetime import datetime, timedelta
 from automation.gpio import toggle
-import redis
+from automation.redis import redis
 from automation import logger
 import requests
 from raspberry.settings import TIME_ZONE
-
-r = redis.Redis(host='127.0.0.1', port=6379, db=0)
     
 class Relay(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -39,8 +37,8 @@ class Action(models.Model):
         higherPriorityExists = (status 
                                 and lastActionExecuted is not None 
                                 and lastActionExecuted.priority < priority 
-                                and (r.get(lastActionExecuted.action.turnOffFlag()) is not None
-                                     or r.get(lastActionExecuted.action.keepOffFlag()) is not None))
+                                and (redis.get(lastActionExecuted.action.turnOffFlag()) is not None
+                                     or redis.get(lastActionExecuted.action.keepOffFlag()) is not None))
         inconsistentStatus = (lastActionExecuted is not None 
                               and lastActionExecuted.action != self 
                               and len(self.relays.filter(status=status)) > 0)
@@ -56,21 +54,21 @@ class Action(models.Model):
 
     def __setActionTimer(self, duration):
         key = self.turnOffFlag()
-        r.sadd("timed.actions", key)
-        r.set(key, self.id)
-        r.expire(key, duration)
+        redis.sadd("timed.actions", key)
+        redis.set(key, self.id)
+        redis.expire(key, duration)
         logger.info("set automatic turn off for action {} after {} seconds".format(self.description, duration))
 
     def __removeActionTimer(self):
         key = self.turnOffFlag()
-        r.srem("timed.actions", key)
-        r.delete(key)
+        redis.srem("timed.actions", key)
+        redis.delete(key)
         logger.info("remove automatic turn off for action {}".format(self.description))
 
     def __setKeepOffFlag(self, duration):
         key = self.keepOffFlag()
-        r.set(key, self.id)
-        r.expire(key, duration)
+        redis.set(key, self.id)
+        redis.expire(key, duration)
         logger.info("set keep off for action {} during {} seconds".format(self.description, duration))
 
     def execute(self, priority = 0, status = None, duration=0):
@@ -188,7 +186,7 @@ class LightSensor(Actionable):
     
     def getDarkness(self):
         key = self.__sensorKey()
-        darkness = r.get(key)
+        darkness = redis.get(key)
         if darkness is None:
             return False
         else:
@@ -201,7 +199,7 @@ class LightSensor(Actionable):
         
         if isDark != self.getDarkness():
             key = self.__sensorKey()
-            r.set(key, bytes(isDark))
+            redis.set(key, bytes(isDark))
             
             logger.info("set darkness {} for sensor {}".format(isDark, self.name))
 
