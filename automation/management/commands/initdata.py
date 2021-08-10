@@ -22,35 +22,19 @@ class Command(BaseCommand):
         
         relay1 = Relay()
         relay1.name = "Module1"
-        relay1.pin = 27
-        relay1.isNormallyClosed = True
+        relay1.pin = 6
+        relay1.isNormallyClosed = False
         relay1.save()
 
         self.stdout.write("Relay {} was created".format(relay1))
     
         relay2 = Relay()
         relay2.name = "Module2"
-        relay2.pin = 16
+        relay2.pin = 24
         relay2.isNormallyClosed = True
         relay2.save()
         
         self.stdout.write("Relay {} was created".format(relay2))
-
-        relay3 = Relay()
-        relay3.name = "Module3"
-        relay3.pin = 22
-        relay3.isNormallyClosed = True
-        relay3.save()
-        
-        self.stdout.write("Relay {} was created".format(relay3))
-
-        relay4 = Relay()
-        relay4.name = "Module4"
-        relay4.pin = 12
-        relay4.isNormallyClosed = True
-        relay4.save()
-        
-        self.stdout.write("Relay {} was created".format(relay3))
         
         action1 = Action()
         action1.address = AUTOMATION["address"]
@@ -79,8 +63,8 @@ class Command(BaseCommand):
         
         switch = Switch()
         switch.name = "Interruptor Puerta"
-        switch.pin = 10
-        switch.duration = 30
+        switch.pin = 26
+        switch.duration = 3600
         switch.priority = 1
         switch.action = action2
         switch.save()
@@ -88,10 +72,10 @@ class Command(BaseCommand):
         self.stdout.write("Switch {} was created".format(switch))
         
         clock = Clock()
-        clock.name = "10 a 12"
-        clock.priority = 3
-        clock.timeStart = time(hour = 10, minute = 0)
-        clock.timeEnd = time(hour = 12, minute = 0)
+        clock.name = "Tarde/Noche"
+        clock.priority = 2
+        clock.timeStart = time(hour = 18, minute = 0)
+        clock.timeEnd = time(hour = 23, minute = 50)
         clock.action = action1
         clock.save()
         
@@ -100,9 +84,8 @@ class Command(BaseCommand):
         lightSensor = LightSensor()
         lightSensor.name = "Sensor Luz"
         lightSensor.priority = 3
-        lightSensor.pin = 23
+        lightSensor.pin = 16
         lightSensor.threshold = 10
-        lightSensor.action = action1
         lightSensor.save()
         
         self.stdout.write("LightSensor {} was created".format(lightSensor))
@@ -110,10 +93,10 @@ class Command(BaseCommand):
         pirSensor = PIRSensor()
         pirSensor.name = "Sensor Movimiento"
         pirSensor.priority = 2
-        pirSensor.pin = 24
-        pirSensor.durationLong = 3600
+        pirSensor.pin = 12
+        pirSensor.durationLong = 120
         pirSensor.durationShort = 30
-        pirSensor.longTimeStart = time(hour = 18, minute = 30)
+        pirSensor.longTimeStart = time(hour = 18, minute = 0)
         pirSensor.longTimeEnd = time(hour = 23, minute = 59)
         pirSensor.action = action3
         pirSensor.save()

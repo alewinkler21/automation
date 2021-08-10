@@ -156,6 +156,8 @@ class Clock(Actionable):
 
     def actuate(self):
         if self.action:
+            # update the action
+            self.action = Action.objects.get(id=self.action.id)
             # calculate duration
             timeZone = pytz.timezone(TIME_ZONE)
             now = datetime.now(tz=timeZone)
@@ -225,6 +227,10 @@ class PIRSensor(Actionable):
     
     def actuate(self):
         if self.action:
+            lightSensor = LightSensor.objects.first()
+            if lightSensor and lightSensor.getDarkness():
+                logger.info("Environment is lit, {} did not act".format(self.name))
+                return
             logger.info("{} actuated on {}".format(self.name, self.action))
             # calculate duration
             timeZone = pytz.timezone(TIME_ZONE)

@@ -105,46 +105,6 @@ class PIRSensorMonitor(Thread):
             previousState = movement
             time.sleep(1)
 
-def initRelays():
-    for r in Relay.objects.filter(isNormallyClosed=True):
-        gpio.toggle(True, r.pin)
-    logger.info("Relays initiated")
-
-def buttonPressed(button):
-    button.actuate()
-
-def initButtons():
-    for button in Switch.objects.all():
-        gpio.initButton(button, buttonPressed)
-    logger.info("Buttons initiated")
-        
-def initClocks():
-    for clock in Clock.objects.all():
-        clockTimer = ClockTimer(clock)
-        clockTimer.setDaemon(True)
-        clockTimer.start()
-    logger.info("Clocks initiated")
-
-def initLightSensors():
-    for lightSensor in LightSensor.objects.all():
-        lightSensorMonitor = LightSensorMonitor(lightSensor)
-        lightSensorMonitor.setDaemon(True)
-        lightSensorMonitor.start()
-    logger.info("Light sensors initiated")
-
-def initPIRSensors():
-    for pirSensor in PIRSensor.objects.all():
-        pirSensorMonitor = PIRSensorMonitor(pirSensor)
-        pirSensorMonitor.setDaemon(True)
-        pirSensorMonitor.start()
-    logger.info("PIR sensors initiated")
-
-def startActionsTimer():
-    actionsTimer = ActionsTimer()
-    actionsTimer.setDaemon(True)
-    actionsTimer.start()
-    logger.info("Actions timer initiated")
-
 class VideoAnalysis(Thread):
     thr = 0.8
     net = cv2.dnn.readNetFromCaffe("{}{}".format(AUTOMATION["modelsPath"], "MobileNetSSD_deploy.prototxt"), 
@@ -156,9 +116,9 @@ class VideoAnalysis(Thread):
                   14: 'motorbike', 15: 'person', 16: 'pottedplant',
                   17: 'sheep', 18: 'sofa', 19: 'train', 20: 'tvmonitor'}
 
-    def run(self):  
+    def run(self):
         while True:
-            logger.info("Videos to analyze: {}".format(redis.scard("videos")))
+            logger.debug("Videos to analyze: {}".format(redis.scard("videos")))
             
             videosToAnalyze = redis.smembers("videos")
             for v in videosToAnalyze:
@@ -274,7 +234,7 @@ class VideoAnalysis(Thread):
                                 or VideoAnalysis.classNames[classId] == "horse"
                                 or VideoAnalysis.classNames[classId] == "sheep"):
                                 
-                                logger.info("Confidence passed detected: {}:{} in {}".format(VideoAnalysis.classNames[classId], confidence, media.videoFile))
+                                logger.debug("Confidence passed detected: {}:{} in {}".format(VideoAnalysis.classNames[classId], confidence, media.videoFile))
 
                                 # Object location
                                 xLeftBottom = int(detections[0, 0, i, 3] * cols)
@@ -309,12 +269,12 @@ class VideoAnalysis(Thread):
         # Closes all the frames
         cv2.destroyAllWindows()
         
-        logger.info("Frames analyzed:{}. Classification:{}".format(framesAnalyzed, media.classification))
+        logger.debug("Frames analyzed:{}. Classification:{}".format(framesAnalyzed, media.classification))
 
-def startRecordingVideo():
-    logger.info("Recording video initiated")
-    with PiCamera() as camera:
-        while True:
+class VideoRecording(Thread):
+    def run(self):        
+        with PiCamera() as camera:
+            while True:
                 try:
                     uniqueId = uuid.uuid1().hex
                     videoFile = "{}.h264".format(uniqueId)
@@ -341,12 +301,6 @@ def startRecordingVideo():
                     break
                 time.sleep(1)
 
-def startVideoAnalysis():
-    videoAnalysis = VideoAnalysis()
-    videoAnalysis.setDaemon(True)
-    videoAnalysis.start()
-    logger.info("Video analysis initiated")
-
 class ElevatorMusic(Thread):
 
     def __init__(self):
@@ -368,6 +322,62 @@ class ElevatorMusic(Thread):
                     logger.info("playing{}".format(song))
                     subprocess.run(["omxplayer", "{}{}".format(AUTOMATION["musicPath"], song)], stdout=subprocess.DEVNULL)
             time.sleep(1)
+
+def clearActions():
+    for action in Action.objects.all():
+        logger.info("Starting service actuated on {}".format(action))
+        try:
+            action.execute(status=False)
+        except ValueError as e:
+            logger.warning(e)
+
+def buttonPressed(button):
+    button.actuate()
+
+def initButtons():
+    for button in Switch.objects.all():
+        gpio.initButton(button, buttonPressed)
+    logger.info("Buttons initiated")
+        
+def initClocks():
+    for clock in Clock.objects.all():
+        clockTimer = ClockTimer(clock)
+        clockTimer.setDaemon(True)
+        clockTimer.start()
+    logger.info("Clocks initiated")
+
+def initLightSensors():
+    for lightSensor in LightSensor.objects.all():
+        lightSensorMonitor = LightSensorMonitor(lightSensor)
+        lightSensorMonitor.setDaemon(True)
+        lightSensorMonitor.start()
+    logger.info("Light sensors initiated")
+
+def initPIRSensors():
+    for pirSensor in PIRSensor.objects.all():
+        pirSensorMonitor = PIRSensorMonitor(pirSensor)
+        pirSensorMonitor.setDaemon(True)
+        pirSensorMonitor.start()
+    logger.info("PIR sensors initiated")
+
+def startActionsTimer():
+    actionsTimer = ActionsTimer()
+    actionsTimer.setDaemon(True)
+    actionsTimer.start()
+    logger.info("Actions timer initiated")
+
+def startRecordingVideo():
+    videoRecording = VideoRecording()
+    videoRecording.setDaemon(True)
+    videoRecording.start()
+    logger.info("Recording video initiated")
+    
+
+def startVideoAnalysis():
+    videoAnalysis = VideoAnalysis()
+    videoAnalysis.setDaemon(True)
+    videoAnalysis.start()
+    logger.info("Video analysis initiated")
 
 def playElevatorMusic():
     elevatorMusic = ElevatorMusic()
@@ -406,7 +416,7 @@ class Command(BaseCommand):
             if options["music"]:
                 playElevatorMusic()
             if options["automation"]:
-                initRelays()
+                clearActions()
                 initButtons()
                 initClocks()
                 initLightSensors()
@@ -414,7 +424,9 @@ class Command(BaseCommand):
                 startActionsTimer()
             if options["camera"]:
                 startVideoAnalysis()
-                startRecordingVideo()  
+                startRecordingVideo()
+            while True:
+                time.sleep(1)
         except KeyboardInterrupt:
             gpio.cleanUp()
             sys.exit()

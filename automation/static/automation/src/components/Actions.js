@@ -13,7 +13,7 @@ class Buttons extends Component {
   executeaction(el) {
 	var url = 'executeaction/';
 	
-	var data = {action: el.id, priority: 1, duration:15};
+	var data = {action: el.id, priority: 1, duration:3600};
 	
     const value = '; ' + document.cookie;
     const parts = value.split('; ' + 'csrftoken' + '=');
