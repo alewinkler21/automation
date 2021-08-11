@@ -10,10 +10,10 @@ class Buttons extends Component {
 		  data: this.props.data
   };
   
-  executeaction(el) {
+  executeaction(action) {
 	var url = 'executeaction/';
 	
-	var data = {action: el.id, priority: 1, duration:3600};
+	var data = {action: action.id, priority: 1, duration:3600};
 	
     const value = '; ' + document.cookie;
     const parts = value.split('; ' + 'csrftoken' + '=');
@@ -37,7 +37,9 @@ class Buttons extends Component {
 	.catch(error => console.error('Error:', error))
 	.then(response => {
 		if(response) {
-			el.status = response.status;
+			action.status = response.status;
+			action.durationOn = (response.status ? response.duration : 0);
+			action.durationOff = (!response.status ? response.duration : 0);
 			this.setState({data: this.state.data})
 		}
 	});
@@ -46,6 +48,22 @@ class Buttons extends Component {
   componentDidUpdate() {
 	  if (this.state.data !== this.props.data) {
 		  this.setState({data: this.props.data});
+	  }
+  }
+  
+  showActionExpiration(action) {
+	  if (action.status) {
+		  if(action.durationOn > 0) {
+			  return "Se apagará automáticamente en " + action.durationOn + " segundos";
+		  } else {
+			  return "";
+		  }
+	  } else {
+		  if(action.durationOff > 0) {
+			  return "No se encenderá automáticamente hasta dentro de " + action.durationOff + " segundos";
+		  } else {
+			  return "";
+		  }
 	  }
   }
   
@@ -59,11 +77,12 @@ class Buttons extends Component {
 		return "";
 	  }
 	  return <ul className="has-text-centered">  
-	  {this.state.data.map(el => (
-			  <li key={el.id} className={el.status ? "notification is-turned-on" : "notification"}>
-	  		  <button className="button" key={el.id} onClick={() => this.executeaction(el)}>
-	  		  {el.description}
+	  {this.state.data.map(action => (
+			  <li key={action.id} className={action.status ? "notification is-turned-on" : "notification"}>
+	  		  <button className="button" key={action.id} onClick={() => this.executeaction(action)}>
+	  		  {action.description}
 	  		  </button>
+	  		  <p className="has-text-black">{this.showActionExpiration(action)}</p>
 	  		  </li>
 	  		  ))}
 	  		</ul>;

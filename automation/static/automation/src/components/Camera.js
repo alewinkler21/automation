@@ -134,7 +134,7 @@ class Camera extends Component {
 		
 		return <div>
 				{popup}
-				<div className="notification has-text-black"videoDescription>
+				<div className="notification has-text-black">
 					<p>Situación actual</p>
 					{currentSituation}
 				</div>

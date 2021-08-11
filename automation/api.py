@@ -28,8 +28,10 @@ class GetActions(APIView):
         actions = Action.objects.all()
         serializer = ActionSerializer(actions, many=True)
         for action in serializer.data:
-            action["expiration"] = redis.ttl(actions.filter(id=action["id"])[0].turnOffFlag())
-        
+            a = actions.filter(id=action["id"])[0]
+            action["durationOn"] = redis.ttl(a.turnOffFlag())
+            action["durationOff"] = redis.ttl(a.keepOffFlag())
+
         return JSONResponse(serializer.data)
 
 class ExecuteAction(APIView):
