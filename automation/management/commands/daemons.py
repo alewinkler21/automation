@@ -323,6 +323,11 @@ class ElevatorMusic(Thread):
                     subprocess.run(["omxplayer", "{}{}".format(AUTOMATION["musicPath"], song)], stdout=subprocess.DEVNULL)
             time.sleep(1)
 
+def initRelays():
+    for r in Relay.objects.filter(isNormallyClosed=True):
+        gpio.toggle(True, r.pin)
+    logger.info("Relays initiated")
+
 def clearActions():
     for action in Action.objects.all():
         logger.info("Starting service actuated on {}".format(action))
@@ -416,6 +421,7 @@ class Command(BaseCommand):
             if options["music"]:
                 playElevatorMusic()
             if options["automation"]:
+                initRelays()
                 clearActions()
                 initButtons()
                 initClocks()
