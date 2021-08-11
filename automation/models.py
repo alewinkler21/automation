@@ -228,7 +228,7 @@ class PIRSensor(Actionable):
     def actuate(self):
         if self.action:
             lightSensor = LightSensor.objects.first()
-            if lightSensor and lightSensor.getDarkness():
+            if lightSensor and not lightSensor.getDarkness():
                 logger.info("Environment is lit, {} did not act".format(self.name))
                 return
             logger.info("{} actuated on {}".format(self.name, self.action))
