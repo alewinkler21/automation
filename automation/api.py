@@ -97,7 +97,6 @@ class DeleteMedia(APIView):
     def __deleteMedia(self, media):
         media.delete()
         remove("{}{}".format(AUTOMATION['mediaPath'], media.videoFile))
-        remove("{}{}".format(AUTOMATION['mediaPath'], media.thumbnail))
 
     def post(self, request, format=None):
         media = Media.objects.get(id=request.data)

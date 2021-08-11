@@ -45,6 +45,7 @@ class DeleteVideo extends Component {
 		var dateFormat = {year: 'numeric', month: 'numeric', day: 'numeric', 
 				hour: 'numeric', minute: 'numeric', second: 'numeric', 
 				hour12: false, weekday: 'long'};
+		
 		return new Intl.DateTimeFormat("es-ES", dateFormat).format(Date.parse(this.state.video.dateCreated));
 	}
 	  

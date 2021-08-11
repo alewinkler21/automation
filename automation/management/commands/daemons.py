@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from automation.models import Action, Switch, Clock, Relay, LightSensor, PIRSensor, Media
 from automation import gpio, logger
-from raspberry.settings import AUTOMATION
+from raspberry.settings import AUTOMATION, TIME_ZONE
 
 import signal
 import sys
@@ -11,7 +11,8 @@ from automation.redis import redis
 from picamera import PiCamera, PiCameraMMALError
 import uuid
 import cv2
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
 import subprocess
 from os import listdir, remove
 from os.path import isfile, join
@@ -395,6 +396,20 @@ def terminateProcess(signalNumber, frame):
     gpio.cleanUp()
     sys.exit()
 
+def deleteOldMedia():
+    timeZone = pytz.timezone(TIME_ZONE)
+    now = datetime.now(tz=timeZone)
+    noDetectionStartDate = now - timedelta(minutes=1)
+    detectionStartDate = now - timedelta(days=10)
+    
+    def deleteMedia(detection, date):
+        for media in Media.objects.filter(movementDetected=detection, dateCreated__lte=date):
+            media.delete()
+            remove("{}{}".format(AUTOMATION['mediaPath'], media.videoFile))
+
+    deleteMedia(False, noDetectionStartDate)
+    deleteMedia(True, detectionStartDate)
+            
 class Command(BaseCommand):
     help = "Start automation daemons"
 
@@ -432,7 +447,8 @@ class Command(BaseCommand):
                 startVideoAnalysis()
                 startRecordingVideo()
             while True:
-                time.sleep(1)
+                time.sleep(60)
+                deleteOldMedia()
         except KeyboardInterrupt:
             gpio.cleanUp()
             sys.exit()
