@@ -94,7 +94,17 @@ class App extends Component {
 				if(response) {
 					this.setState({alarmArmed: response.armed})
 				}
-			});	  
+			});
+		fetch("systemstatus/").then(res => {
+			if (res.ok) 
+				return res.json();
+			else
+				throw new Error(res.status + ' ' + res.statusText);
+			}).catch(error => console.error('Error:', error)).then(response => {
+				if(response) {
+					this.setState({systemStatus: response})
+				}
+			});	
 	}
 
 	recordVideo(){
@@ -128,7 +138,7 @@ class App extends Component {
 	}
 
 	render() {
-		let content;
+		var content;
 		switch(this.state.screen) {
 			case "controls":
 				content = <DataProvider
@@ -141,6 +151,10 @@ class App extends Component {
 			default:
 				content = <p><a href="/admin">Configuración</a></p>;
 		}
+		var uptime = (this.state.systemStatus ? this.state.systemStatus.uptime : "");
+		var temperature = (this.state.systemStatus ? this.state.systemStatus.temperature : "");
+		var isDark = (this.state.systemStatus ? (this.state.systemStatus.isDark ? "está oscuro" : "está iluminado") : "");
+
 		return (
 			<div className="column has-text-centered">
 				<nav className="navbar-menu is-active is-mobile">
@@ -168,6 +182,7 @@ class App extends Component {
 					</div>
 				</nav>
 				{content}
+				<p>{uptime} - {temperature} - {isDark}</p>
 			</div>)
 	}
 }

@@ -9,10 +9,11 @@ from automation import logger
 from os import remove
 from automation.redis import redis
 from django.db.models import Q
-from automation.models import Action, Alarm, Media
+from automation.models import Action, Alarm, Media, LightSensor
 from automation.serializers import ActionSerializer, ActionHistorySerializer, AlarmSerializer, MediaSerializer
 
 from raspberry.settings import AUTOMATION
+import subprocess
 
 class JSONResponse(HttpResponse):
     def __init__(self, data, **kwargs):
@@ -123,3 +124,22 @@ class PlayMusic(APIView):
         redis.set("play.music", bytes(playMusic))
 
         return JSONResponse(playMusic)
+    
+class SystemStatus(APIView):
+    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+ 
+    def get(self, request, format=None):
+        uptime = subprocess.run(["uptime", "-p"], capture_output=True)
+        temp = subprocess.run(["vcgencmd", "measure_temp"], capture_output=True)
+        isDark = True
+        lightSensor = LightSensor.objects.first()
+        if lightSensor:
+            isDark = lightSensor.getDarkness()
+
+        data = {}
+        data["uptime"] = str(uptime.stdout, "UTF-8").rstrip()
+        data["temperature"] = str(temp.stdout, "UTF-8").rstrip()
+        data["isDark"] = isDark
+        
+        return JSONResponse(data)
