@@ -164,16 +164,18 @@ class App extends Component {
 								<i className="fas fa-lg fa-lightbulb"></i>
 							</span> 
 						</button>
-						<button className="button is-large is-dark" href="#" onClick={() => this.navigate("camera")}>
-							<span className="icon is-medium"> 
-								<i className="fas fa-lg fa-file-video"></i>
-							</span> 
-						</button>
-						<button className={this.state.alarmArmed ? "button is-large is-danger" : "button is-large is-dark"} href="#" onClick={() => this.playmusic()}>
-							<span className="icon is-medium"> 
-								<i className="fas fa-lg fa-music"></i> 
-							</span> 
-						</button>
+						{
+						//<button className="button is-large is-dark" href="#" onClick={() => this.navigate("camera")}>
+						//	<span className="icon is-medium"> 
+						//		<i className="fas fa-lg fa-file-video"></i>
+						//	</span> 
+						//</button>
+						//<button className={this.state.alarmArmed ? "button is-large is-danger" : "button is-large is-dark"} href="#" onClick={() => this.playmusic()}>
+						//	<span className="icon is-medium"> 
+						//		<i className="fas fa-lg fa-music"></i> 
+						//	</span> 
+						//</button>
+						}
 						<button className="button is-large is-dark" href="#" onClick={() => window.location.href = "/admin"}>
 						<span className="icon is-medium"> 
 							<i className="fas fa-lg fa-cog"></i>

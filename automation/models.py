@@ -34,8 +34,8 @@ class Action(models.Model):
         lastActionExecuted = ActionHistory.objects.filter(action__id__in = relatedActions).last()
         if status is None:
             status = not self.status
-        higherPriorityExists = (status 
-                                and lastActionExecuted is not None 
+        higherPriorityExists = (lastActionExecuted is not None 
+                                and lastActionExecuted.priority > 0
                                 and lastActionExecuted.priority < priority 
                                 and (redis.get(lastActionExecuted.action.turnOffFlag()) is not None
                                      or redis.get(lastActionExecuted.action.keepOffFlag()) is not None))
