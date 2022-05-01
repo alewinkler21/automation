@@ -7,7 +7,7 @@ import signal
 import sys
 import time
 from threading import Thread
-from automation.redis import redis
+from automation.redis import redis_conn
 from picamera import PiCamera, PiCameraMMALError
 import uuid
 import cv2
@@ -31,11 +31,11 @@ class ActionsTimer(Thread):
         while True:
             logger.debug("Let's check what to turn off")
             
-            timedActionsKeys = redis.smembers(keysList)
+            timedActionsKeys = redis_conn.smembers(keysList)
             if len(timedActionsKeys) > 0:
                 for ta in timedActionsKeys:
                     timedActionKey = str(ta, "UTF-8")
-                    actionId = redis.get(timedActionKey)
+                    actionId = redis_conn.get(timedActionKey)
                     if actionId is None:
                         actionId = timedActionKey.split(".")[-1]
                         action = self.__getAction(actionId)
@@ -45,16 +45,16 @@ class ActionsTimer(Thread):
                                 
                                 logger.debug("action {} expired".format(action))
                             except ValueError as e:
-                                redis.srem(keysList, timedActionKey)
+                                redis_conn.srem(keysList, timedActionKey)
                                 logger.warning(e)
                         else:
-                            redis.delete(timedActionKey)
-                            redis.srem(keysList, timedActionKey)
+                            redis_conn.delete(timedActionKey)
+                            redis_conn.srem(keysList, timedActionKey)
                             logger.error("action {} doesn't exist".format(actionId))
                     else:
                         action = self.__getAction(str(actionId, "UTF-8"))
                         if action:
-                            secondsRemaining = redis.ttl(timedActionKey)
+                            secondsRemaining = redis_conn.ttl(timedActionKey)
                             logger.debug("{} seconds left to turn off {}".format(secondsRemaining, action))
             else:
                 logger.debug("No valid timed actions")
@@ -119,9 +119,9 @@ class VideoAnalysis(Thread):
 
     def run(self):
         while True:
-            logger.debug("Videos to analyze: {}".format(redis.scard("videos")))
+            logger.debug("Videos to analyze: {}".format(redis_conn.scard("videos")))
             
-            videosToAnalyze = redis.smembers("videos")
+            videosToAnalyze = redis_conn.smembers("videos")
             for v in videosToAnalyze:
                 vid = str(v, "UTF-8")
                 media = None
@@ -129,7 +129,7 @@ class VideoAnalysis(Thread):
                     media = Media.objects.get(id=vid)
                 except Action.DoesNotExist:
                     logger.error("Video not found in database")
-                redis.srem("videos", vid)
+                redis_conn.srem("videos", vid)
                 if media is not None:
                     logger.info("Analyzing {}".format(media.videoFile))                        
                     start = datetime.now()
@@ -293,7 +293,7 @@ class VideoRecording(Thread):
                     media.videoFile = MP4file
                     media.save()
                     # put media in analyzer queue
-                    redis.sadd("videos", media.id)
+                    redis_conn.sadd("videos", media.id)
                 except PiCameraMMALError as error:
                     logger.error(error)
                     break
@@ -309,7 +309,7 @@ class ElevatorMusic(Thread):
         self.musicFiles = [f for f in listdir(AUTOMATION["musicPath"]) if isfile(join(AUTOMATION["musicPath"], f))]
 
     def __continuePlaying(self):
-        playMusic = redis.get("play.music")
+        playMusic = redis_conn.get("play.music")
         if playMusic is None:
             return False
         else:

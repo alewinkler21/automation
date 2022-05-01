@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from automation import logger
 from os import remove
-from automation.redis import redis
+from automation.redis import redis_conn
 from django.db.models import Q
 from automation.models import Action, Alarm, Media, LightSensor
 from automation.serializers import ActionSerializer, ActionHistorySerializer, AlarmSerializer, MediaSerializer
@@ -30,8 +30,8 @@ class GetActions(APIView):
         serializer = ActionSerializer(actions, many=True)
         for action in serializer.data:
             a = actions.filter(id=action["id"])[0]
-            action["durationOn"] = redis.ttl(a.turnOffFlag())
-            action["durationOff"] = redis.ttl(a.keepOffFlag())
+            action["durationOn"] = redis_conn.ttl(a.turnOffFlag())
+            action["durationOff"] = redis_conn.ttl(a.keepOffFlag())
 
         return JSONResponse(serializer.data)
 
@@ -113,7 +113,7 @@ class PlayMusic(APIView):
     permission_classes = (permissions.IsAuthenticated,)
     
     def __continuePlaying(self):
-        playMusic = redis.get("play.music")
+        playMusic = redis_conn.get("play.music")
         if playMusic is None:
             return False
         else:
@@ -121,7 +121,7 @@ class PlayMusic(APIView):
         
     def post(self, request, format=None):
         playMusic = not self.__continuePlaying()
-        redis.set("play.music", bytes(playMusic))
+        redis_conn.set("play.music", bytes(playMusic))
 
         return JSONResponse(playMusic)
     

@@ -3,10 +3,11 @@ from django.utils import timezone
 import pytz
 from datetime import datetime, timedelta
 from automation.gpio import toggle
-from automation.redis import redis
+from automation.redis import redis_conn
 from automation import logger
 import requests
 from raspberry.settings import TIME_ZONE
+import redis_lock
     
 class Relay(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -37,8 +38,8 @@ class Action(models.Model):
         higherPriorityExists = (lastActionExecuted is not None 
                                 and lastActionExecuted.priority > 0
                                 and lastActionExecuted.priority < priority 
-                                and (redis.get(lastActionExecuted.action.turnOffFlag()) is not None
-                                     or redis.get(lastActionExecuted.action.keepOffFlag()) is not None))
+                                and (redis_conn.get(lastActionExecuted.action.turnOffFlag()) is not None
+                                     or redis_conn.get(lastActionExecuted.action.keepOffFlag()) is not None))
         inconsistentStatus = (lastActionExecuted is not None 
                               and lastActionExecuted.action != self 
                               and len(self.relays.filter(status=status)) > 0)
@@ -54,59 +55,60 @@ class Action(models.Model):
 
     def __setActionTimer(self, duration):
         key = self.turnOffFlag()
-        redis.sadd("timed.actions", key)
-        redis.set(key, self.id)
-        redis.expire(key, duration)
+        redis_conn.sadd("timed.actions", key)
+        redis_conn.set(key, self.id)
+        redis_conn.expire(key, duration)
         logger.info("set automatic turn off for action {} after {} seconds".format(self.description, duration))
 
     def __removeActionTimer(self):
         key = self.turnOffFlag()
-        redis.srem("timed.actions", key)
-        redis.delete(key)
+        redis_conn.srem("timed.actions", key)
+        redis_conn.delete(key)
         logger.info("remove automatic turn off for action {}".format(self.description))
 
     def __setKeepOffFlag(self, duration):
         key = self.keepOffFlag()
-        redis.set(key, self.id)
-        redis.expire(key, duration)
+        redis_conn.set(key, self.id)
+        redis_conn.expire(key, duration)
         logger.info("set keep off for action {} during {} seconds".format(self.description, duration))
 
     def execute(self, priority = 0, status = None, duration=0):
-        if self.address == "127.0.0.1": 
-            canExecute, status, error = self.__canExecute(priority, status)
-            if canExecute:
-                for r in self.relays.all():
-                    toggle(not status if r.isNormallyClosed else status, r.pin)
-                    r.status = status
-                    r.save()
-                self.status = status
-                self.save()
-                # save history
-                actionHistory = ActionHistory()
-                actionHistory.action = self
-                actionHistory.priority = priority
-                actionHistory.status = status
-                actionHistory.duration = duration
-                actionHistory.save()
-                
-                logger.info("action {} turned {}".format(self.description, "on" if status else "off"))
-                if not status:
-                    self.__removeActionTimer()
-                if duration > 0:
-                    self.__setActionTimer(duration) if status else self.__setKeepOffFlag(duration)
-
-                return status, priority, duration
+        with redis_lock.Lock(redis_conn, 'can_execute'):
+            if self.address == "127.0.0.1": 
+                canExecute, status, error = self.__canExecute(priority, status)
+                if canExecute:
+                    for r in self.relays.all():
+                        toggle(not status if r.isNormallyClosed else status, r.pin)
+                        r.status = status
+                        r.save()
+                    self.status = status
+                    self.save()
+                    # save history
+                    actionHistory = ActionHistory()
+                    actionHistory.action = self
+                    actionHistory.priority = priority
+                    actionHistory.status = status
+                    actionHistory.duration = duration
+                    actionHistory.save()
+                    
+                    logger.info("action {} turned {}".format(self.description, "on" if status else "off"))
+                    if not status:
+                        self.__removeActionTimer()
+                    if duration > 0:
+                        self.__setActionTimer(duration) if status else self.__setKeepOffFlag(duration)
+    
+                    return status, priority, duration
+                else:
+                    raise ValueError(error)
             else:
-                raise ValueError(error)
-        else:
-                # toggle remote relay
-#                 url = 'http://{}{}'.format(relay.address, request.path)
-#                 resp = requests.get(url, headers=request.headers, verify=False)
-#                 if resp.status_code == 201:
-#                     return Response(serializer.data, status=status.HTTP_201_CREATED)
-#                 else:
-#                     return Response(resp.reason, status=resp.status_code)
-            raise ValueError("action {} belongs to other raspi".format(self.description))
+                    # toggle remote relay
+    #                 url = 'http://{}{}'.format(relay.address, request.path)
+    #                 resp = requests.get(url, headers=request.headers, verify=False)
+    #                 if resp.status_code == 201:
+    #                     return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #                 else:
+    #                     return Response(resp.reason, status=resp.status_code)
+                raise ValueError("action {} belongs to other raspi".format(self.description))
 
     def __str__(self):
         return self.description
@@ -188,7 +190,7 @@ class LightSensor(Actionable):
     
     def getDarkness(self):
         key = self.__sensorKey()
-        darkness = redis.get(key)
+        darkness = redis_conn.get(key)
         if darkness is None:
             return False
         else:
@@ -201,7 +203,7 @@ class LightSensor(Actionable):
         
         if isDark != self.getDarkness():
             key = self.__sensorKey()
-            redis.set(key, bytes(isDark))
+            redis_conn.set(key, bytes(isDark))
             
             logger.info("set darkness {} for sensor {}".format(isDark, self.name))
 
