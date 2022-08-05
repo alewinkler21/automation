@@ -3,12 +3,12 @@
 @import "bulma-0.8.0/sass/utilities/functions";
 
 /* lights */
-$turned-on: #FEE467;
+$turned-on: #C00C30;
 $turned-on-invert: findColorInvert($turned-on);
 
 $primary: #1A3B88;
-$dark: #0E2B6F;
-$light: #33529B;
+$dark: #001E57;
+$light: #002F87;
 $black: #363636;
 
 @import "bulma-0.8.0/sass/utilities/derived-variables";
@@ -42,6 +42,7 @@ body {
 .modal-card-body {
 	padding: 0;
 }
+
 
 .navbar-menu {
 	background: $primary;

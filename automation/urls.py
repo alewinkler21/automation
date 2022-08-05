@@ -11,6 +11,7 @@ urlpatterns = [
     url(r'^accounts/login/$', auth_views.LoginView.as_view(), name='login'),
     url(r'^logout/$', auth_views.LogoutView.as_view(),{'next_page': '/accounts/login'}),
     url(r'^actions/$', api.GetActions.as_view(), name='actions'),
+    url(r'^actionshistory/$', api.GetActionsHistory.as_view(), name='actions'),
     url(r'^executeaction/$', api.ExecuteAction.as_view(), name='executeaction'),
     url(r'^togglealarm/$', api.ToggleAlarm.as_view(), name='togglealarm'),
     url(r'^alarm/$', api.GetAlarm.as_view(), name='alarm'),

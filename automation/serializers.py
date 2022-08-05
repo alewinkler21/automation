@@ -10,7 +10,13 @@ class ActionSerializer(serializers.ModelSerializer):
 class ActionHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ActionHistory
-        fields = ('action', 'date', 'priority', 'duration', 'status')
+        fields = ('action', 'date', 'priority', 'duration', 'status', 'who')
+
+class GetActionHistorySerializer(serializers.ModelSerializer):
+    action = ActionSerializer(many=False, read_only=True)
+    class Meta:
+        model = ActionHistory
+        fields = ('id', 'action', 'date', 'priority', 'duration', 'status', 'who')
 
 class AlarmSerializer(serializers.ModelSerializer):
     class Meta:

@@ -72,7 +72,7 @@ class Action(models.Model):
         redis_conn.expire(key, duration)
         logger.info("set keep off for action {} during {} seconds".format(self.description, duration))
 
-    def execute(self, priority = 0, status = None, duration=0):
+    def execute(self, priority = 0, status = None, duration=0, who=""):
         with redis_lock.Lock(redis_conn, 'can_execute'):
             if self.address == "127.0.0.1": 
                 canExecute, status, error = self.__canExecute(priority, status)
@@ -89,6 +89,7 @@ class Action(models.Model):
                     actionHistory.priority = priority
                     actionHistory.status = status
                     actionHistory.duration = duration
+                    actionHistory.who = who
                     actionHistory.save()
                     
                     logger.info("action {} turned {}".format(self.description, "on" if status else "off"))
@@ -119,6 +120,7 @@ class ActionHistory(models.Model):
     duration = models.IntegerField();
     priority = models.IntegerField(default=100);
     status = models.BooleanField(default=False, editable=False)
+    who = models.CharField(max_length=20, null=True, blank=True)
     
     class Meta:
         get_latest_by = 'date'
@@ -148,7 +150,7 @@ class Switch(Actionable):
         if self.action:
             logger.info("{} actuated on {}".format(self.name, self.action))
             try:
-                self.action.execute(priority=self.priority, duration=self.duration)
+                self.action.execute(priority=self.priority, duration=self.duration, who='switch')
             except ValueError as e:
                 logger.warning(e)
 
@@ -174,7 +176,7 @@ class Clock(Actionable):
             if self.action.status != status:
                 logger.info("{} actuated on {}".format(self.name, self.action))
                 try:
-                    self.action.execute(priority=self.priority, status=status, duration=duration)
+                    self.action.execute(priority=self.priority, status=status, duration=duration, who='clock')
                 except ValueError as e:
                     logger.warning(e)
 
@@ -213,7 +215,7 @@ class LightSensor(Actionable):
         if self.action:
             logger.info("{} actuated on {}".format(self.name, self.action))
             try:
-                self.action.execute(priority=self.priority, status=self.getDarkness())
+                self.action.execute(priority=self.priority, status=self.getDarkness(), who='light_sensor')
             except ValueError as e:
                 logger.warning(e)
 
@@ -244,7 +246,7 @@ class PIRSensor(Actionable):
             duration = self.durationLong if now >= longTimeStart and now < longTimeEnd else self.durationShort
             
             try:
-                self.action.execute(priority=self.priority, status=True, duration=duration)
+                self.action.execute(priority=self.priority, status=True, duration=duration, who='pir_sensor')
             except ValueError as e:
                 logger.warning(e)
 

@@ -23,9 +23,16 @@ class DataProvider extends Component {
 		  this.setState({ data: data, loaded: true })
 	  });	  
   }
+  
   componentDidMount() {
-	  this.fetchData();
+    this.fetchData();
+    this.intervalID = setInterval(() => this.fetchData(), 5000);
   }
+    
+  componentWillUnmount(){
+    clearInterval(this.intervalID);
+  }
+
   componentDidUpdate(prevProps) {
 	  if (this.props.endpoint !== prevProps.endpoint) {
 		  this.fetchData();

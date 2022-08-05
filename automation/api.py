@@ -9,8 +9,8 @@ from automation import logger
 from os import remove
 from automation.redis import redis_conn
 from django.db.models import Q
-from automation.models import Action, Alarm, Media, LightSensor
-from automation.serializers import ActionSerializer, ActionHistorySerializer, AlarmSerializer, MediaSerializer
+from automation.models import Action, Alarm, Media, LightSensor, ActionHistory
+from automation.serializers import ActionSerializer, ActionHistorySerializer, GetActionHistorySerializer, AlarmSerializer, MediaSerializer
 
 from raspberry.settings import AUTOMATION
 import subprocess
@@ -35,6 +35,16 @@ class GetActions(APIView):
 
         return JSONResponse(serializer.data)
 
+class GetActionsHistory(APIView):
+    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+ 
+    def get(self, request, format=None):
+        actionsHistory = ActionHistory.objects.all()[:15]
+        serializer = GetActionHistorySerializer(actionsHistory, many=True)
+
+        return JSONResponse(serializer.data)
+    
 class ExecuteAction(APIView):
     authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
@@ -45,7 +55,7 @@ class ExecuteAction(APIView):
             data = serializer.validated_data
             action = data["action"]
             try:
-                newStatus, priority, duration = action.execute(priority=data["priority"], duration=data["duration"])
+                newStatus, priority, duration = action.execute(priority=data["priority"], duration=data["duration"], who=data["who"])
                 data["status"] = newStatus
                 
                 return Response(serializer.data, status=status.HTTP_200_OK)

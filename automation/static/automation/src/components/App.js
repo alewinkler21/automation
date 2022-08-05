@@ -4,6 +4,7 @@ import ReactDOM from "react-dom";
 import DataProvider from "./DataProvider";
 import Actions from "./Actions";
 import Camera from "./Camera";
+import ActionsHistory from "./ActionsHistory";
 
 class App extends Component {	
 
@@ -135,8 +136,13 @@ class App extends Component {
 
 	componentDidMount() {
 		this.fetchData();
+		this.intervalID = setInterval(() => this.fetchData(), 5000);
 	}
-
+    
+    componentWillUnmount(){
+      clearInterval(this.intervalID);
+    }
+  
 	render() {
 		var content;
 		switch(this.state.screen) {
@@ -145,16 +151,36 @@ class App extends Component {
 				endpoint="actions/" 
 				render={data => <Actions data={data} />} />;
 				break;
+			case "system_status":
+				var uptime = (this.state.systemStatus ? this.state.systemStatus.uptime : "");
+				var temperature = (this.state.systemStatus ? this.state.systemStatus.temperature : "");
+				var isDark = (this.state.systemStatus ? (this.state.systemStatus.isDark ? "está oscuro" : "está iluminado") : "");
+				content = <div>
+							<div class="field">
+								<label class="label has-text-white">Timpo encendido</label>
+								<span>{uptime}</span>
+						  	</div>
+							<div class="field">
+								<label class="label has-text-white">Temperatura CPU</label>
+								<span>{temperature}</span>
+						  	</div>
+							<div class="field">
+								<label class="label has-text-white">Ambiente</label>
+								<span>{isDark}</span>
+						  	</div>
+						  </div>;
+				break;
+			case "actions_history":
+				content = <DataProvider
+				endpoint="actionshistory/" 
+				render={data => <ActionsHistory data={data} />} />;
+				break;
 			case "camera":
 				content = <Camera />;
 				break;
 			default:
 				content = <p><a href="/admin">Configuración</a></p>;
 		}
-		var uptime = (this.state.systemStatus ? this.state.systemStatus.uptime : "");
-		var temperature = (this.state.systemStatus ? this.state.systemStatus.temperature : "");
-		var isDark = (this.state.systemStatus ? (this.state.systemStatus.isDark ? "está oscuro" : "está iluminado") : "");
-
 		return (
 			<div className="column has-text-centered">
 				<nav className="navbar-menu is-active is-mobile">
@@ -163,6 +189,16 @@ class App extends Component {
 							<span className="icon is-medium"> 
 								<i className="fas fa-lg fa-lightbulb"></i>
 							</span> 
+						</button>
+						<button className="button is-large is-dark" href="#" onClick={() => this.navigate("system_status")}>
+							<span className="icon is-medium"> 
+								<i className="fas fa-lg fa-heartbeat"></i>
+							</span>
+						</button>
+						<button className="button is-large is-dark" href="#" onClick={() => this.navigate("actions_history")}>
+							<span className="icon is-medium"> 
+								<i className="fas fa-lg fa-history"></i>
+							</span>
 						</button>
 						{
 						//<button className="button is-large is-dark" href="#" onClick={() => this.navigate("camera")}>
@@ -184,7 +220,6 @@ class App extends Component {
 					</div>
 				</nav>
 				{content}
-				<p>{uptime} - {temperature} - {isDark}</p>
 			</div>)
 	}
 }

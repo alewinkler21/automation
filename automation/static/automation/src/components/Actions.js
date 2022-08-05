@@ -13,7 +13,7 @@ class Buttons extends Component {
   executeaction(action) {
 	var url = 'executeaction/';
 	
-	var data = {action: action.id, priority: 1, duration:3600};
+	var data = {action: action.id, priority: 1, duration:3600, who: 'manual'};
 	
     const value = '; ' + document.cookie;
     const parts = value.split('; ' + 'csrftoken' + '=');
@@ -54,17 +54,12 @@ class Buttons extends Component {
   showActionExpiration(action) {
 	  if (action.status) {
 		  if(action.durationOn > 0) {
-			  return "Se apagará automáticamente en " + action.durationOn + " segundos";
-		  } else {
-			  return "";
-		  }
-	  } else {
-		  if(action.durationOff > 0) {
-			  return "No se encenderá automáticamente hasta dentro de " + action.durationOff + " segundos";
+			  return "Se apagará automáticamente en " + new Date(action.durationOn * 1000).toISOString().substr(11, 8);
 		  } else {
 			  return "";
 		  }
 	  }
+	  return "";
   }
   
   render() {
