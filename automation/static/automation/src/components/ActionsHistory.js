@@ -27,7 +27,7 @@ class History extends Component {
 	  }
 	  return <ul className="has-text-centered">  
 	  {this.state.data.map(actionHistory => (
-			  <li key={actionHistory.id} className={actionHistory.status ? "notification is-turned-on" : "notification"}>
+			  <li key={actionHistory.id} className={actionHistory.status ? "notification is-turned-on" : "notification has-text-black"}>
 	  		  {actionHistory.action.description} - {new Date(actionHistory.date).toLocaleString()} - {actionHistory.who}
 	  		  </li>
 	  		  ))}

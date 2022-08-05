@@ -41,7 +41,7 @@ class ActionsTimer(Thread):
                         action = self.__getAction(actionId)
                         if action:
                             try:
-                                action.execute(status=False)
+                                action.execute(status=False, who="timer")
                                 
                                 logger.debug("action {} expired".format(action))
                             except ValueError as e:
@@ -333,7 +333,7 @@ def clearActions():
     for action in Action.objects.all():
         logger.info("Starting service actuated on {}".format(action))
         try:
-            action.execute(status=False)
+            action.execute(status=False, who="system starting")
         except ValueError as e:
             logger.warning(e)
 

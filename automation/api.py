@@ -40,7 +40,7 @@ class GetActionsHistory(APIView):
     permission_classes = (permissions.IsAuthenticated,)
  
     def get(self, request, format=None):
-        actionsHistory = ActionHistory.objects.all()[:15]
+        actionsHistory = ActionHistory.objects.all().order_by('-date')[:15]
         serializer = GetActionHistorySerializer(actionsHistory, many=True)
 
         return JSONResponse(serializer.data)
