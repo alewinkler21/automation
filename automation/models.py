@@ -164,11 +164,11 @@ class Clock(Actionable):
             self.action = Action.objects.get(id=self.action.id)
             # calculate duration
             timeZone = pytz.timezone(TIME_ZONE)
-            now = datetime.now(tz=timeZone)
-            timeStart = timeZone.localize(datetime.combine(now, self.timeStart))
-            timeEnd = (timeZone.localize(datetime.combine(now, self.timeEnd)) 
-                       if self.timeEnd > self.timeStart 
-                       else timeZone.localize(datetime.combine(now + timedelta(days=1), self.timeEnd)))
+            now = datetime.now(tz=timeZone)            
+            timeStart = (timeZone.localize(datetime.combine(now, self.timeStart))
+                           if self.timeEnd > self.timeStart 
+                           else timeZone.localize(datetime.combine(now + timedelta(days=-1), self.timeStart)))
+            timeEnd = timeZone.localize(datetime.combine(now, self.timeEnd))
             delta = timeEnd - now
             duration = delta.days * 24 * 3600 + delta.seconds
             # calculate status
@@ -239,10 +239,10 @@ class PIRSensor(Actionable):
             # calculate duration
             timeZone = pytz.timezone(TIME_ZONE)
             now = datetime.now(tz=timeZone)
-            longTimeStart = timeZone.localize(datetime.combine(now, self.longTimeStart))
-            longTimeEnd = (timeZone.localize(datetime.combine(now, self.longTimeEnd)) 
+            longTimeStart = (timeZone.localize(datetime.combine(now, self.longTimeStart))
                            if self.longTimeEnd > self.longTimeStart 
-                           else timeZone.localize(datetime.combine(now + timedelta(days=1), self.longTimeEnd)))
+                           else timeZone.localize(datetime.combine(now + timedelta(days=-1), self.longTimeStart)))
+            longTimeEnd = timeZone.localize(datetime.combine(now, self.longTimeEnd))
             duration = self.durationLong if now >= longTimeStart and now < longTimeEnd else self.durationShort
             
             try:
