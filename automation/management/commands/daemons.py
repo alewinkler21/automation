@@ -324,6 +324,22 @@ class ElevatorMusic(Thread):
                     subprocess.run(["omxplayer", "{}{}".format(AUTOMATION["musicPath"], song)], stdout=subprocess.DEVNULL)
             time.sleep(1)
 
+class Photographer(Thread):
+    def run(self):        
+        with PiCamera() as camera:
+            while True:
+                try:
+                    imageFile = "{}{}{}".format(AUTOMATION["mediaPath"], uuid.uuid1().hex, ".jpg")
+                    camera.image_effect = "watercolor"
+                    camera.capture(imageFile)
+                except PiCameraMMALError as error:
+                    logger.error(error)
+                    break
+                except:
+                    logger.error("Photographer:Unexpected error:{}".format(sys.exc_info()[0]))
+                    break
+                time.sleep(30)
+
 def initRelays():
     for r in Relay.objects.filter(isNormallyClosed=True):
         gpio.toggle(True, r.pin)
@@ -391,6 +407,12 @@ def playElevatorMusic():
     elevatorMusic.start()
     logger.info("Elevator music initiated")
 
+def startPhotographer():
+    photographer = Photographer()
+    photographer.setDaemon(True)
+    photographer.start()
+    logger.info("Photographer initiated")
+    
 def terminateProcess(signalNumber, frame):
     logger.info("(SIGTERM) terminating the process")
     gpio.cleanUp()
@@ -429,6 +451,11 @@ class Command(BaseCommand):
             action='store_true',
             help='Start elevator music',
         )
+        parser.add_argument(
+            '--photographer',
+            action='store_true',
+            help='Start photographer',
+        )
                      
     def handle(self, *args, **options):
         signal.signal(signal.SIGTERM, terminateProcess)
@@ -446,6 +473,8 @@ class Command(BaseCommand):
             if options["camera"]:
                 startVideoAnalysis()
                 startRecordingVideo()
+            if options["photographer"]:
+                startPhotographer()
             while True:
                 time.sleep(60)
                 deleteOldMedia()

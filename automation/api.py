@@ -6,7 +6,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from automation import logger
-from os import remove
+from os import listdir, remove
 from automation.redis import redis_conn
 from django.db.models import Q
 from automation.models import Action, Alarm, Media, LightSensor, ActionHistory
@@ -153,3 +153,14 @@ class SystemStatus(APIView):
         data["isDark"] = isDark
         
         return JSONResponse(data)
+    
+class GetPhotos(APIView):
+    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+ 
+    def get(self, format=None):
+        photos = []
+        for f in listdir(AUTOMATION["mediaPath"]):
+            photos.append(f)
+                
+        return JSONResponse(photos)

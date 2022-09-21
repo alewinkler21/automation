@@ -5,6 +5,7 @@ import DataProvider from "./DataProvider";
 import Actions from "./Actions";
 import Camera from "./Camera";
 import ActionsHistory from "./ActionsHistory";
+import Photographer from "./Photographer";
 
 class App extends Component {	
 
@@ -86,6 +87,7 @@ class App extends Component {
 	}
 
 	fetchData(){
+		/*
 		fetch("alarm/").then(res => {
 			if (res.ok) 
 				return res.json();
@@ -96,6 +98,7 @@ class App extends Component {
 					this.setState({alarmArmed: response.armed})
 				}
 			});
+		*/
 		fetch("systemstatus/").then(res => {
 			if (res.ok) 
 				return res.json();
@@ -105,7 +108,7 @@ class App extends Component {
 				if(response) {
 					this.setState({systemStatus: response})
 				}
-			});	
+			});			
 	}
 
 	recordVideo(){
@@ -178,6 +181,9 @@ class App extends Component {
 			case "camera":
 				content = <Camera />;
 				break;
+			case "photographer":
+				content = <Photographer />;
+				break;
 			default:
 				content = <p><a href="/admin">Configuración</a></p>;
 		}
@@ -185,21 +191,30 @@ class App extends Component {
 			<div className="column has-text-centered">
 				<nav className="navbar-menu is-active is-mobile">
 					<div className="navbar-start">
-						<button className="button is-large is-dark" href="#" onClick={() => this.navigate("controls")}>
+						{
+						//<button className="button is-large is-dark" href="#" onClick={() => this.navigate("controls")}>
+						//	<span className="icon is-medium"> 
+						//		<i className="fas fa-lg fa-lightbulb"></i>
+						//	</span> 
+						//</button>						
+						}
+						<button className="button is-large" href="#" onClick={() => this.navigate("photographer")}>
 							<span className="icon is-medium"> 
-								<i className="fas fa-lg fa-lightbulb"></i>
-							</span> 
+								<i className="fas fa-lg fa-camera-retro"></i>
+							</span>
 						</button>
-						<button className="button is-large is-dark" href="#" onClick={() => this.navigate("system_status")}>
+						<button className="button is-large" href="#" onClick={() => this.navigate("system_status")}>
 							<span className="icon is-medium"> 
 								<i className="fas fa-lg fa-heartbeat"></i>
 							</span>
 						</button>
-						<button className="button is-large is-dark" href="#" onClick={() => this.navigate("actions_history")}>
-							<span className="icon is-medium"> 
-								<i className="fas fa-lg fa-history"></i>
-							</span>
-						</button>
+						{
+						//<button className="button is-large is-dark" href="#" onClick={() => this.navigate("actions_history")}>
+						//	<span className="icon is-medium"> 
+						//		<i className="fas fa-lg fa-history"></i>
+						//	</span>
+						//</button>	
+						}
 						{
 						//<button className="button is-large is-dark" href="#" onClick={() => this.navigate("camera")}>
 						//	<span className="icon is-medium"> 
@@ -212,11 +227,13 @@ class App extends Component {
 						//	</span> 
 						//</button>
 						}
-						<button className="button is-large is-dark" href="#" onClick={() => window.location.href = "/admin"}>
-						<span className="icon is-medium"> 
-							<i className="fas fa-lg fa-cog"></i>
-						</span> 
-					</button>
+						{
+						//<button className="button is-large is-dark" href="#" onClick={() => window.location.href = "/admin"}>
+						//<span className="icon is-medium"> 
+						//	<i className="fas fa-lg fa-cog"></i>
+						//</span> 
+						//</button>
+						}
 					</div>
 				</nav>
 				{content}
@@ -225,4 +242,4 @@ class App extends Component {
 }
 
 const wrapper = document.getElementById("app");
-wrapper ? ReactDOM.render(<App screen="controls" />, wrapper) : null;
+wrapper ? ReactDOM.render(<App screen="photographer" />, wrapper) : null;
