@@ -162,21 +162,19 @@ class Clock(Actionable):
         if self.action:
             # update the action
             self.action = Action.objects.get(id=self.action.id)
-            # calculate duration
+            # calculate status            
             timeZone = pytz.timezone(TIME_ZONE)
-            now = datetime.now(tz=timeZone)            
-            timeStart = (timeZone.localize(datetime.combine(now, self.timeStart))
-                           if self.timeEnd > self.timeStart 
-                           else timeZone.localize(datetime.combine(now + timedelta(days=-1), self.timeStart)))
-            timeEnd = timeZone.localize(datetime.combine(now, self.timeEnd))
-            delta = timeEnd - now
-            duration = delta.days * 24 * 3600 + delta.seconds
-            # calculate status
-            status = True if now >= timeStart and now < timeEnd else False
+            current_time = datetime.now(tz=timeZone).time()
+            cross_the_day = False if self.timeEnd > self.timeStart else True
+            status = False
+            if cross_the_day:
+                status = True if current_time >= self.timeStart or current_time < self.timeEnd else False
+            else:
+                status = True if current_time >= self.timeStart and current_time < self.timeEnd else False
             if self.action.status != status:
                 logger.info("{} actuated on {}".format(self.name, self.action))
                 try:
-                    self.action.execute(priority=self.priority, status=status, duration=duration, who='clock')
+                    self.action.execute(priority=self.priority, status=status, who='clock')
                 except ValueError as e:
                     logger.warning(e)
 
