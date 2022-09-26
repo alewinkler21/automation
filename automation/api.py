@@ -6,7 +6,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from automation import logger
-from os import listdir, remove
+from os import listdir, remove, path
 from automation.redis import redis_conn
 from django.db.models import Q
 from automation.models import Action, Alarm, Media, LightSensor, ActionHistory
@@ -159,8 +159,6 @@ class GetPhotos(APIView):
     permission_classes = (permissions.IsAuthenticated,)
  
     def get(self, format=None):
-        photos = []
-        for f in listdir(AUTOMATION["mediaPath"]):
-            photos.append(f)
-                
-        return JSONResponse(photos)
+        return JSONResponse(sorted(listdir(AUTOMATION["mediaPath"]), key = lambda f: path.getmtime(path.join(AUTOMATION["mediaPath"], f)), reverse=True))
+
+

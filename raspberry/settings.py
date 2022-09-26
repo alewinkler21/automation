@@ -25,7 +25,7 @@ SECRET_KEY = '+#s5ods@5!dv616i4axbks2o$t3x93f4kvrwgue-_l@0!8tx+1'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost','127.0.0.1','[::1]','192.168.1.106', 'houseremote.dyndns.org']
+ALLOWED_HOSTS = ['localhost','127.0.0.1','[::1]','192.168.0.110', 'miscuentas.ddns.net']
 
 # Application definition
 
@@ -119,7 +119,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
-#STATIC_ROOT = '/var/www/raspberry/static/'
+STATIC_ROOT = '/var/www/html/static/'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated'),

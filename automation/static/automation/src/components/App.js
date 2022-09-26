@@ -139,11 +139,11 @@ class App extends Component {
 
 	componentDidMount() {
 		this.fetchData();
-		this.intervalID = setInterval(() => this.fetchData(), 5000);
+		//this.intervalID = setInterval(() => this.fetchData(), 5000);
 	}
     
     componentWillUnmount(){
-      clearInterval(this.intervalID);
+      //clearInterval(this.intervalID);
     }
   
 	render() {
