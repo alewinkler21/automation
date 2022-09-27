@@ -90,6 +90,13 @@ class Photographer extends Component {
 		return popup;
 	}
 	
+	photoDescription(photo) {
+		var dateFormat = {year: 'numeric', month: 'numeric', day: 'numeric', 
+				hour: 'numeric', minute: 'numeric', second: 'numeric', 
+				hour12: false, weekday: 'long'};
+		return new Intl.DateTimeFormat("es-ES", dateFormat).format(Date.parse(photo.dateCreated));
+	}
+	
 	render() {
 		if (!this.state.data || this.state.data.length == 0) {
 			return (<div className="has-text-centered has-text-white">No hay archivos multimedia</div>);
@@ -108,10 +115,15 @@ class Photographer extends Component {
 					  <div className="card">
 					      <div className="card-image">
 					          <figure className="image is-3by2">
-					            <a href="#" onClick={() => this.showPhoto(photo)}>
-									<img src={"camera/" + photo.thumbnail} alt="" />
-								</a>
+					            <img src={"camera/" + photo.thumbnail} alt="" />
 					          </figure>
+							  <div class="card-content is-overlay is-clipped">
+							    <span class="tag is-info">
+						            <a class="has-text-white" href="#" onClick={() => this.showPhoto(photo)}>
+										{this.photoDescription(photo)}
+									</a>
+							    </span>       
+							  </div>					          
 					      </div>
 					  </div>
 					</div>
