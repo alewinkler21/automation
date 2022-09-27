@@ -117,7 +117,25 @@ class DeleteMedia(APIView):
             self.__deleteMedia(media)
             
         return Response(request.data, status=status.HTTP_200_OK)
-    
+
+class DeleteAllMedia(APIView):
+    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication)
+    permission_classes = (permissions.IsAuthenticated,)
+ 
+    def __deleteMedia(self, media):
+        media.delete()
+        if media.videoFile:
+            remove("{}{}".format(AUTOMATION['mediaPath'], media.videoFile))
+        if media.thumbnail:
+            remove("{}{}".format(AUTOMATION['mediaPath'], media.thumbnail))
+
+    def post(self, request, format=None):
+        allMedia= Media.objects.all()
+        for media in allMedia:
+            self.__deleteMedia(media)
+            
+        return Response(request.data, status=status.HTTP_200_OK)
+        
 class PlayMusic(APIView):
     authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated,)
@@ -153,12 +171,4 @@ class SystemStatus(APIView):
         data["isDark"] = isDark
         
         return JSONResponse(data)
-    
-class GetPhotos(APIView):
-    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
- 
-    def get(self, format=None):
-        return JSONResponse(sorted(listdir(AUTOMATION["mediaPath"]), key = lambda f: path.getmtime(path.join(AUTOMATION["mediaPath"], f)), reverse=True))
-
 

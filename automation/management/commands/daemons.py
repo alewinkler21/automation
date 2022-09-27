@@ -105,9 +105,16 @@ class PIRSensorMonitor(Thread):
                             try:
                                 effects = ["none", "watercolor", "cartoon"]
                                 for effect in effects:
-                                    imageFile = "{}{}_{}{}".format(AUTOMATION["mediaPath"], effect, uuid.uuid1().hex, ".jpg")
+                                    imageFileName = "{}_{}{}".format(effect, uuid.uuid1().hex, ".jpg")
+                                    imageFilePath = "{}{}".format(AUTOMATION["mediaPath"], imageFileName)
                                     camera.image_effect = effect
-                                    camera.capture(imageFile)
+                                    camera.capture(imageFilePath)
+                                    # save metadata
+                                    media = Media()
+                                    media.thumbnail = imageFileName
+                                    media.videoFile = ""
+                                    media.movementDetected = True
+                                    media.save()
                                     time.sleep(1)
                             except PiCameraMMALError as error:
                                 logger.error(error)
@@ -421,7 +428,10 @@ def deleteOldMedia():
     def deleteMedia(detection, date):
         for media in Media.objects.filter(movementDetected=detection, dateCreated__lte=date):
             media.delete()
-            remove("{}{}".format(AUTOMATION['mediaPath'], media.videoFile))
+            if media.videoFile:
+                remove("{}{}".format(AUTOMATION['mediaPath'], media.videoFile))
+            if media.thumbnail:
+                remove("{}{}".format(AUTOMATION['mediaPath'], media.thumbnail))
 
     deleteMedia(False, noDetectionStartDate)
     deleteMedia(True, detectionStartDate)

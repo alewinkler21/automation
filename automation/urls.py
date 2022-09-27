@@ -17,7 +17,7 @@ urlpatterns = [
     url(r'^alarm/$', api.GetAlarm.as_view(), name='alarm'),
     url(r'^media/$', api.GetMedia.as_view(), name='media'),
     url(r'^deletemedia/$', api.DeleteMedia.as_view(), name='deletemedia'),
+    url(r'^deleteallmedia/$', api.DeleteAllMedia.as_view(), name='deleteallmedia'),
     url(r'^playmusic/$', api.PlayMusic.as_view(), name='playmusic'),
-    url(r'^systemstatus/$', api.SystemStatus.as_view(), name='systemstatus'),
-    url(r'^photographer/$', api.GetPhotos.as_view(), name='photographer')
+    url(r'^systemstatus/$', api.SystemStatus.as_view(), name='systemstatus')
 ]

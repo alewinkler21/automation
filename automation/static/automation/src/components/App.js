@@ -161,15 +161,15 @@ class App extends Component {
 				content = <div>
 							<div class="field">
 								<label class="label has-text-white">Timpo encendido</label>
-								<span>{uptime}</span>
+								<span class="has-text-white">{uptime}</span>
 						  	</div>
 							<div class="field">
 								<label class="label has-text-white">Temperatura CPU</label>
-								<span>{temperature}</span>
+								<span class="has-text-white">{temperature}</span>
 						  	</div>
 							<div class="field">
 								<label class="label has-text-white">Ambiente</label>
-								<span>{isDark}</span>
+								<span class="has-text-white">{isDark}</span>
 						  	</div>
 						  </div>;
 				break;
