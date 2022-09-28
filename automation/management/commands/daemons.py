@@ -100,7 +100,7 @@ class PIRSensorMonitor(Thread):
                 if movement != previousState:  # avoid repeating the same signal
                     self.sensor.actuate()
                     if self.sensor.camera:
-                        logger.info("Something has moved! let's take a picture.")
+                        logger.info("Movement detected! let's take a picture.")
                         with PiCamera() as camera:
                             try:
                                 effects = ["none", "watercolor", "cartoon"]
