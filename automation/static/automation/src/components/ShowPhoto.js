@@ -16,12 +16,29 @@ class ShowPhoto extends Component {
 				hour12: false, weekday: 'long'};
 		return new Intl.DateTimeFormat("es-ES", dateFormat).format(Date.parse(this.state.photo.dateCreated));
 	}
+	
+    share(){
+		var url = "https://micamara.ddns.net:8443/camera/" + this.state.photo.thumbnail;
+        if (navigator.share) {
+          navigator.share({
+            title: 'Compartir foto',
+            url: url
+          }).catch(console.error);
+        } else {
+            window.location.href = "mailto:?subject=Check this opportunity&body=<a href='" + encodeURIComponent(url) + "'>link</a>";
+        }
+    }
 		  
 	render() {
 		return <div className="modal is-active">
 		<div className="modal-background" />
 			<div className="modal-card">
 			<header className="modal-card-head">
+				<button className="button" onClick={() => this.share()}>
+					<span className="icon">
+					  <i className="fas fa-share" ></i>
+					</span>
+				</button>
 				<p className="modal-card-title">{this.photoDescription()}</p>
 				<button className="delete" onClick={() => this.props.close()} />
 			</header>

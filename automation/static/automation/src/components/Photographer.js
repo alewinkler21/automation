@@ -106,8 +106,8 @@ class Photographer extends Component {
 		return <div>
 				{popup}
 				<div>
-					<label class="label has-text-white">{this.state.data.length + " archivos"}</label>
-					<button class="button is-danger" onClick={() => this.deleteMedia()}>Borrar todo</button>
+					<label className="label has-text-white">{this.state.data.length + " archivos"}</label>
+					<button className="button is-danger" onClick={() => this.deleteMedia()}>Borrar todo</button>
 				</div>
 				<div className="columns is-multiline">
 				{this.state.data.map(photo => (
@@ -117,9 +117,9 @@ class Photographer extends Component {
 					          <figure className="image is-3by2">
 					            <img src={"camera/" + photo.thumbnail} alt="" />
 					          </figure>
-							  <div class="card-content is-overlay is-clipped">
-							    <span class="tag is-info">
-						            <a class="has-text-white" href="#" onClick={() => this.showPhoto(photo)}>
+							  <div className="card-content is-overlay is-clipped">
+							    <span className="tag is-info">
+						            <a className="has-text-white" href="#" onClick={() => this.showPhoto(photo)}>
 										{this.photoDescription(photo)}
 									</a>
 							    </span>       
