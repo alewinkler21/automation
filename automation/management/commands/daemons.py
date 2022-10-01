@@ -103,9 +103,11 @@ class PIRSensorMonitor(Thread):
                         logger.info("Movement detected! let's take a picture.")
                         with PiCamera() as camera:
                             try:
-                                effects = ["none", "watercolor", "cartoon"]
+                                effects = ["cartoon"]
+                                imageId = uuid.uuid1().hex
+                                camera.resolution = (3280, 2464)
                                 for effect in effects:
-                                    imageFileName = "{}_{}{}".format(effect, uuid.uuid1().hex, ".jpg")
+                                    imageFileName = "{}_{}{}".format(imageId, effect, ".jpg")
                                     imageFilePath = "{}{}".format(AUTOMATION["mediaPath"], imageFileName)
                                     camera.image_effect = effect
                                     camera.capture(imageFilePath)
@@ -115,6 +117,8 @@ class PIRSensorMonitor(Thread):
                                     media.videoFile = ""
                                     media.movementDetected = True
                                     media.save()
+                                    # put media in analyzer queue
+                                    redis_conn.sadd("photos", media.id)
                                     time.sleep(1)
                             except PiCameraMMALError as error:
                                 logger.error(error)
@@ -128,6 +132,78 @@ class PIRSensorMonitor(Thread):
                 logger.debug("No movement")
             previousState = movement
             time.sleep(1)
+            
+class PhotoAnalysis(Thread):
+    thr = 0.8
+    net = cv2.dnn.readNetFromCaffe("{}{}".format(AUTOMATION["modelsPath"], "MobileNetSSD_deploy.prototxt"), 
+                                   "{}{}".format(AUTOMATION["modelsPath"], "MobileNetSSD_deploy.caffemodel"))
+    classNames = {0: 'background',
+                  1: 'aeroplane', 2: 'bicycle', 3: 'bird', 4: 'boat',
+                  5: 'bottle', 6: 'bus', 7: 'car', 8: 'cat', 9: 'chair',
+                  10: 'cow', 11: 'diningtable', 12: 'dog', 13: 'horse',
+                  14: 'motorbike', 15: 'person', 16: 'pottedplant',
+                  17: 'sheep', 18: 'sofa', 19: 'train', 20: 'tvmonitor'}
+
+    def run(self):
+        while True:
+            logger.debug("Photos to analyze: {}".format(redis_conn.scard("photos")))
+            
+            photosToAnalyze = redis_conn.smembers("photos")
+            for p in photosToAnalyze:
+                pid = str(p, "UTF-8")
+                media = None
+                try:
+                    media = Media.objects.get(id=pid)
+                except Action.DoesNotExist:
+                    logger.error("Photo not found in database")
+                redis_conn.srem("photos", pid)
+                if media is not None:
+                    logger.info("Analyzing {}".format(media.thumbnail))                        
+                    start = datetime.now()
+                    
+                    classification = self.__classify(media)
+                    
+                    end = datetime.now()
+                    logger.info("Photo analysis duration {}s".format((end - start).total_seconds()))   
+                    # if nothing detected, delete media
+                    if classification == None:
+                        media.delete()
+                        if media.thumbnail:
+                            remove("{}{}".format(AUTOMATION['mediaPath'], media.thumbnail))
+            time.sleep(1)
+
+    def __classify(self, media):
+        img = cv2.imread("{}{}".format(AUTOMATION["mediaPath"], media.thumbnail))
+        # Resizing the Image
+        cvImage = cv2.resize(img, (360, 240))
+        # create blob
+        blob = cv2.dnn.blobFromImage(cvImage, 0.007843, (360, 240), (127.5, 127.5, 127.5), False)
+        # Set to network the input blob
+        PhotoAnalysis.net.setInput(blob)
+        # Prediction of network
+        detections = PhotoAnalysis.net.forward()
+        # For get the class and location of object detected,
+        # There is a fix index for class, location and confidence
+        # value in @detections array .
+        for i in range(detections.shape[2]):
+            confidence = detections[0, 0, i, 2]  # Confidence of prediction
+            if confidence > PhotoAnalysis.thr:  # Filter prediction
+                classId = int(detections[0, 0, i, 1])  # Class label
+                if (PhotoAnalysis.classNames[classId] == "person"
+                    or PhotoAnalysis.classNames[classId] == "dog"):
+                    
+                    logger.debug("Confidence passed detected: {}:{} in {}".format(PhotoAnalysis.classNames[classId], confidence, media.thumbnail))
+                    # update media
+                    media.classification = PhotoAnalysis.classNames[classId]
+                    media.save()
+                    
+                    break
+                
+        cv2.destroyAllWindows()            
+    
+        logger.debug("Photo analyzed:{}. Classification:{}".format(media.thumbnail, media.classification))
+        
+        return media.classification
 
 class VideoAnalysis(Thread):
     thr = 0.8
@@ -408,6 +484,12 @@ def startVideoAnalysis():
     videoAnalysis.start()
     logger.info("Video analysis initiated")
 
+def startPhotoAnalysis():
+    photoAnalysis = PhotoAnalysis()
+    photoAnalysis.setDaemon(True)
+    photoAnalysis.start()
+    logger.info("Photo analysis initiated")
+    
 def playElevatorMusic():
     elevatorMusic = ElevatorMusic()
     elevatorMusic.setDaemon(True)
@@ -470,8 +552,9 @@ class Command(BaseCommand):
                 initPIRSensors()
                 startActionsTimer()
             if options["camera"]:
-                startVideoAnalysis()
-                startRecordingVideo()
+                #startVideoAnalysis()
+                #startRecordingVideo()
+                startPhotoAnalysis()
             while True:
                 time.sleep(60)
                 deleteOldMedia()

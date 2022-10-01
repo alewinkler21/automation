@@ -95,7 +95,7 @@ class GetMedia(APIView):
     def get(self, format=None):
         last = Media.objects.last()
         lastId = last.id if last else 0
-        media = Media.objects.filter(Q(movementDetected=True) | Q(id=lastId)).order_by('-dateCreated')
+        media = Media.objects.filter(classification__isnull=False).order_by('-dateCreated')
 #         paginator = Paginator(media, 5)
 #         page = paginator.get_page(1)
 #         serializer = MediaSerializer(page, many=True)
