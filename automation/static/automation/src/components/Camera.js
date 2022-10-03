@@ -19,11 +19,11 @@ class Camera extends Component {
 
 	componentDidMount() {
 		this.fetchData();
-//		this.interval = setInterval(this.fetchData, this.state.delay);
+		this.interval = setInterval(this.fetchData, this.state.delay);
 	}
 		
 	componentWillUnmount() {
-//		clearInterval(this.interval);
+		clearInterval(this.interval);
 	}
 	
 	fetchData = () => {

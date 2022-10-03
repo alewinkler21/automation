@@ -1,6 +1,6 @@
 import logging
 
-logging.basicConfig(format='[%(levelname)s][%(threadName)s]:%(message)s', level=logging.INFO)
+logging.basicConfig(filename='/var/log/automation/automation.log', format='[%(levelname)s][%(threadName)s]:%(message)s', level=logging.INFO)
 log = logging.getLogger("AUTOMATION")
 
 def debug(message):

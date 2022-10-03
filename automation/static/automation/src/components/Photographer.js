@@ -94,12 +94,7 @@ class Photographer extends Component {
 		var dateFormat = {year: 'numeric', month: 'numeric', day: 'numeric', 
 				hour: 'numeric', minute: 'numeric', second: 'numeric', 
 				hour12: false, weekday: 'long'};
-		var description = '';
-		if (photo.classification) {
-			description += photo.classification + ' - ';
-		}
-		description += new Intl.DateTimeFormat("es-ES", dateFormat).format(Date.parse(photo.dateCreated));
-		return description;
+		return new Intl.DateTimeFormat("es-ES", dateFormat).format(Date.parse(photo.dateCreated));
 	}
 	
 	render() {
