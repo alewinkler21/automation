@@ -1,0 +1,21 @@
+#!/bin/bash
+
+scp manage.py esopo:/opt/houseremote
+scp automation/management/commands/daemons.py esopo:/opt/houseremote/automation/management/commands
+scp automation/management/commands/initdata.py esopo:/opt/houseremote/automation/management/commands
+scp automation/static/automation/css/style.css esopo:/opt/houseremote/static/automation/css
+scp automation/static/automation/js/all.js esopo:/opt/houseremote/static/automation/js
+scp automation/static/automation/js/main.js esopo:/opt/houseremote/static/automation/js
+scp automation/static/automation/images/favicon.ico esopo:/opt/houseremote/static/automation/images
+scp automation/templates/registration/login.html esopo:/opt/houseremote/automation/templates/registration
+scp automation/templates/automation/index.html esopo:/opt/houseremote/automation/templates/automation
+scp automation/logger.py esopo:/opt/houseremote/automation
+scp automation/admin.py esopo:/opt/houseremote/automation
+scp automation/api.py esopo:/opt/houseremote/automation
+scp automation/apps.py esopo:/opt/houseremote/automation
+scp automation/gpio.py esopo:/opt/houseremote/automation
+scp automation/models.py esopo:/opt/houseremote/automation
+scp automation/redis.py esopo:/opt/houseremote/automation
+scp automation/serializers.py esopo:/opt/houseremote/automation
+scp automation/urls.py esopo:/opt/houseremote/automation
+scp automation/notify.py esopo:/opt/houseremote/automation

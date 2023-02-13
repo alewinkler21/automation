@@ -1,0 +1,8 @@
+#!/bin/bash
+
+export NODE_OPTIONS=--openssl-legacy-provider
+
+sass --style=compressed --no-source-map automation/static/automation/css/style.scss automation/static/automation/css/style.css
+
+npm run build
+

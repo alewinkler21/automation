@@ -1,5 +1,4 @@
 from django.http import HttpResponse
-from django.core.paginator import Paginator
 
 from rest_framework import authentication, permissions, status
 from rest_framework.renderers import JSONRenderer
@@ -64,30 +63,6 @@ class ExecuteAction(APIView):
                 return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class GetAlarm(APIView):
-    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
- 
-    def get(self, format=None):
-        try:
-            alarm = Alarm.objects.latest()
-        except Alarm.DoesNotExist:
-            alarm = None
-        serializer = AlarmSerializer(alarm)
-        
-        return JSONResponse(serializer.data)
-
-class ToggleAlarm(APIView):
-    authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication)
-    permission_classes = (permissions.IsAuthenticated,)
- 
-    def post(self, request, format=None):
-        serializer = AlarmSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 class GetMedia(APIView):
     authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
@@ -96,9 +71,6 @@ class GetMedia(APIView):
         last = Media.objects.last()
         lastId = last.id if last else 0
         media = Media.objects.filter(classification__isnull=False).order_by('-dateCreated')
-#         paginator = Paginator(media, 5)
-#         page = paginator.get_page(1)
-#         serializer = MediaSerializer(page, many=True)
         serializer = MediaSerializer(media, many=True)
         
         return JSONResponse(serializer.data)

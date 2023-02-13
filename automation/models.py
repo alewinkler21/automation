@@ -5,10 +5,12 @@ from datetime import datetime, timedelta
 from automation.gpio import toggle
 from automation.redis import redis_conn
 from automation import logger
+from automation import notify
 import requests
-from raspberry.settings import TIME_ZONE
+from requests import Response
+from raspberry.settings import AUTOMATION, TIME_ZONE
 import redis_lock
-    
+
 class Relay(models.Model):
     name = models.CharField(max_length=50, unique=True)
     pin = models.IntegerField();
@@ -102,14 +104,13 @@ class Action(models.Model):
                 else:
                     raise ValueError(error)
             else:
-                    # toggle remote relay
-    #                 url = 'http://{}{}'.format(relay.address, request.path)
-    #                 resp = requests.get(url, headers=request.headers, verify=False)
-    #                 if resp.status_code == 201:
-    #                     return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #                 else:
-    #                     return Response(resp.reason, status=resp.status_code)
-                raise ValueError("action {} belongs to other raspi".format(self.description))
+                url = 'http://{}{}'.format(self.address, request.path)
+                resp = requests.post(url, data={action: self.id, priority: priority, duration: duration, who: who}, verify=False)
+                if resp.status_code == 201:
+                    return Response(self, status=status.HTTP_201_CREATED)
+                else:
+                    return Response(resp.reason, status=resp.status_code)
+                #raise ValueError("action {} belongs to other raspi".format(self.description))
 
     def __str__(self):
         return self.description
@@ -177,6 +178,23 @@ class Clock(Actionable):
                     self.action.execute(priority=self.priority, status=status, who='clock')
                 except ValueError as e:
                     logger.warning(e)
+
+class GasSensor(Actionable):
+    duration = models.IntegerField();
+    pin = models.IntegerField();
+    
+    def __str__(self):
+        return Actionable.__str__(self) + " ({})".format(self.pin)
+    
+    def actuate(self):
+        if self.action:
+            logger.info("{} actuated on {}".format(self.name, self.action))
+            try:
+                self.action.execute(priority=self.priority, duration=self.duration, who='gas_sensor')
+            except ValueError as e:
+                logger.warning(e)
+        c = notify.defaultClient()
+        c.sendSMS(AUTOMATION["notifyPhone"], "Atención: {}".format(self.name))
 
 class LightSensor(Actionable):
     pin = models.IntegerField();
@@ -248,16 +266,6 @@ class PIRSensor(Actionable):
                 self.action.execute(priority=self.priority, status=True, duration=duration, who='pir_sensor')
             except ValueError as e:
                 logger.warning(e)
-
-class Alarm(models.Model):
-    armed = models.BooleanField(default=False)
-    date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    detectPeople = models.BooleanField(default=False)
-    fired = models.BooleanField(default=False)
-    useCamera = models.BooleanField(default=False)
-    
-    class Meta:
-        get_latest_by = 'date'
         
 class Media(models.Model):
     classification = models.CharField(max_length=20, null=True, blank=True)

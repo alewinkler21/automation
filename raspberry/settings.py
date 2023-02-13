@@ -133,5 +133,6 @@ AUTOMATION = {
     'videoDuration': 15,
     'modelsPath': '/opt/houseremote/',
     'musicPath': '/opt/houseremote/music/',
-    'redis-host': '127.0.0.1'
+    'redis-host': '127.0.0.1',
+    'notifyPhone': '59899694853'
 }

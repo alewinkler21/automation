@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from automation.models import Action, Switch, Clock, Relay, LightSensor, PIRSensor, Media
+from automation.models import Action, Switch, Clock, Relay, LightSensor, PIRSensor, Media, GasSensor
 from automation import gpio, logger
 from raspberry.settings import AUTOMATION, TIME_ZONE
 
@@ -170,7 +170,7 @@ class PhotoAnalysis(Thread):
                         media.delete()
                         if media.thumbnail:
                             remove("{}{}".format(AUTOMATION['mediaPath'], media.thumbnail))
-            time.sleep(1)
+            time.sleep(10)
 
     def __classify(self, media):
         img = cv2.imread("{}{}".format(AUTOMATION["mediaPath"], media.thumbnail))
@@ -436,14 +436,19 @@ def clearActions():
         except ValueError as e:
             logger.warning(e)
 
-def buttonPressed(button):
-    button.actuate()
+def eventHandler(actionable):
+    actionable.actuate()
 
 def initButtons():
     for button in Switch.objects.all():
-        gpio.initButton(button, buttonPressed)
+        gpio.addEventListener(button, eventHandler)
     logger.info("Buttons initiated")
-        
+
+def initGasSensors():
+    for gsensor in GasSensor.objects.all():
+        gpio.addEventListener(gsensor, eventHandler)
+    logger.info("Gas sensors initiated")
+
 def initClocks():
     for clock in Clock.objects.all():
         clockTimer = ClockTimer(clock)
@@ -547,6 +552,7 @@ class Command(BaseCommand):
                 initRelays()
                 clearActions()
                 initButtons()
+                initGasSensors()
                 initClocks()
                 initLightSensors()
                 initPIRSensors()

@@ -53,52 +53,8 @@ class App extends Component {
 			}
 		});
 	}
-	
-	toggleAlarm() {
-		var url = 'togglealarm/';
-		
-		var data = {armed: !this.state.alarmArmed, useCamera: true, fired: false, detectPeople: true};
-
-		const value = '; ' + document.cookie;
-		const parts = value.split('; ' + 'csrftoken' + '=');
-		
-		if (parts.length == 2) {
-			var csrftoken = parts.pop().split(";").shift();
-		}
-		
-		fetch(url, {
-			method: 'POST',
-			body: JSON.stringify(data),
-			headers:{
-				'Content-Type': 'application/json',
-				'X-CSRFToken': csrftoken
-			}
-		}).then(res => {
-			if (res.ok) 
-				return res.json();
-			else
-				throw new Error(res.status + ' ' + res.statusText);})
-		.catch(error => console.error('Error:', error))
-		.then(response => {
-			if(response) {
-				this.setState({alarmArmed: response.armed})
-			}
-		});
-	}
 
 	fetchData(){
-		/*
-		fetch("alarm/").then(res => {
-			if (res.ok) 
-				return res.json();
-			else
-				throw new Error(res.status + ' ' + res.statusText);
-			}).catch(error => console.error('Error:', error)).then(response => {
-				if(response) {
-					this.setState({alarmArmed: response.armed})
-				}
-			});
-		*/
 		fetch("systemstatus/").then(res => {
 			if (res.ok) 
 				return res.json();
@@ -110,32 +66,6 @@ class App extends Component {
 				}
 			});			
 	}
-
-	recordVideo(){
-		const value = '; ' + document.cookie;
-		const parts = value.split('; ' + 'csrftoken' + '=');
-		
-		if (parts.length == 2) {
-			var csrftoken = parts.pop().split(";").shift();
-		}
-		fetch("recordvideo/", {
-			method: 'POST',
-			headers:{
-				'Content-Type': 'application/json',
-				'X-CSRFToken': csrftoken
-			}
-		}).then(res => {
-			if (res.ok) 
-				return res.json();
-			else
-				throw new Error(res.status + ' ' + res.statusText);})
-		.catch(error => console.error('Error:', error))
-		.then(response => {
-			if(response) {
-				alert(response);
-			}
-		});
-  	}
 
 	componentDidMount() {
 		this.fetchData();
@@ -192,11 +122,11 @@ class App extends Component {
 				<nav className="navbar-menu is-active is-mobile">
 					<div className="navbar-start">
 						{
-						//<button className="button is-large is-dark" href="#" onClick={() => this.navigate("controls")}>
-						//	<span className="icon is-medium"> 
-						//		<i className="fas fa-lg fa-lightbulb"></i>
-						//	</span> 
-						//</button>						
+						<button className="button is-large" href="#" onClick={() => this.navigate("controls")}>
+							<span className="icon is-medium"> 
+								<i className="fas fa-lg fa-lightbulb"></i>
+							</span> 
+						</button>						
 						}
 						<button className="button is-large" href="#" onClick={() => this.navigate("photographer")}>
 							<span className="icon is-medium"> 
@@ -209,11 +139,11 @@ class App extends Component {
 							</span>
 						</button>
 						{
-						//<button className="button is-large is-dark" href="#" onClick={() => this.navigate("actions_history")}>
-						//	<span className="icon is-medium"> 
-						//		<i className="fas fa-lg fa-history"></i>
-						//	</span>
-						//</button>	
+						<button className="button is-large" href="#" onClick={() => this.navigate("actions_history")}>
+							<span className="icon is-medium"> 
+								<i className="fas fa-lg fa-history"></i>
+							</span>
+						</button>
 						}
 						{
 						//<button className="button is-large is-dark" href="#" onClick={() => this.navigate("camera")}>
@@ -228,11 +158,11 @@ class App extends Component {
 						//</button>
 						}
 						{
-						//<button className="button is-large is-dark" href="#" onClick={() => window.location.href = "/admin"}>
-						//<span className="icon is-medium"> 
-						//	<i className="fas fa-lg fa-cog"></i>
-						//</span> 
-						//</button>
+						<button className="button is-large" href="#" onClick={() => window.location.href = "/admin"}>
+							<span className="icon is-medium"> 
+								<i className="fas fa-lg fa-cog"></i>
+							</span> 
+						</button>
 						}
 					</div>
 				</nav>
@@ -242,4 +172,4 @@ class App extends Component {
 }
 
 const wrapper = document.getElementById("app");
-wrapper ? ReactDOM.render(<App screen="photographer" />, wrapper) : null;
+wrapper ? ReactDOM.render(<App screen="controls" />, wrapper) : null;

@@ -18,3 +18,4 @@ scp automation/models.py heraclito:/opt/houseremote/automation
 scp automation/redis.py heraclito:/opt/houseremote/automation
 scp automation/serializers.py heraclito:/opt/houseremote/automation
 scp automation/urls.py heraclito:/opt/houseremote/automation
+scp automation/notify.py heraclito:/opt/houseremote/automation

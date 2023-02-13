@@ -1,5 +1,6 @@
 from automation import logger as logger
 import requests
+from raspberry.settings import AUTOMATION
 
 baseURL = "https://api.plivo.com/v1"
 
@@ -32,4 +33,4 @@ def defaultClient():
 
 def test():
     c = defaultClient()
-    c.sendSMS("59899694853", "Plivo SMS test")
+    c.sendSMS(AUTOMATION["notifyPhone"], "Plivo SMS test")

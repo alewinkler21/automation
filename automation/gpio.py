@@ -22,10 +22,10 @@ def configurePinAsInput(pin):
     # change the pin back to input
     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
-def initButton(button, fn):
-    configurePinAsInput(button.pin)
+def addEventListener(eventListener, fn):
+    configurePinAsInput(eventListener.pin)
     # subscribe to rising event
-    GPIO.add_event_detect(button.pin, GPIO.RISING, callback=lambda x: fn(button), bouncetime=500)
+    GPIO.add_event_detect(eventListener.pin, GPIO.RISING, callback=lambda x: fn(eventListener), bouncetime=500)
 
 def initSensor(sensor):
     configurePinAsInput(sensor.pin)
