@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from automation.models import Action, Alarm, Media, ActionHistory
+from automation.models import Action, Media, ActionHistory
 
 class ActionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,11 +17,6 @@ class GetActionHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ActionHistory
         fields = ('id', 'action', 'date', 'priority', 'duration', 'status', 'who')
-
-class AlarmSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Alarm
-        fields = ('armed', 'fired', 'useCamera', 'detectPeople')
          
 class MediaSerializer(serializers.ModelSerializer):
     class Meta:

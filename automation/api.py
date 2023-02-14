@@ -8,8 +8,8 @@ from automation import logger
 from os import listdir, remove, path
 from automation.redis import redis_conn
 from django.db.models import Q
-from automation.models import Action, Alarm, Media, LightSensor, ActionHistory
-from automation.serializers import ActionSerializer, ActionHistorySerializer, GetActionHistorySerializer, AlarmSerializer, MediaSerializer
+from automation.models import Action, Media, LightSensor, ActionHistory
+from automation.serializers import ActionSerializer, ActionHistorySerializer, GetActionHistorySerializer, MediaSerializer
 
 from raspberry.settings import AUTOMATION
 import subprocess

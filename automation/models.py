@@ -193,8 +193,9 @@ class GasSensor(Actionable):
                 self.action.execute(priority=self.priority, duration=self.duration, who='gas_sensor')
             except ValueError as e:
                 logger.warning(e)
-        c = notify.defaultClient()
-        c.sendSMS(AUTOMATION["notifyPhone"], "Atención: {}".format(self.name))
+        logger.warning("¡Detectamos GAS!")
+        #c = notify.defaultClient()
+        #c.sendSMS(AUTOMATION["notifyPhone"], "Atención: {}".format(self.name))
 
 class LightSensor(Actionable):
     pin = models.IntegerField();

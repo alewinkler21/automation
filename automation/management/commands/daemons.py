@@ -422,6 +422,17 @@ class ElevatorMusic(Thread):
                     logger.info("playing{}".format(song))
                     subprocess.run(["omxplayer", "{}{}".format(AUTOMATION["musicPath"], song)], stdout=subprocess.DEVNULL)
             time.sleep(1)
+            
+class EventsMonitor(Thread):
+
+    def __init__(self, eventListener):
+        super(EventsMonitor, self).__init__()
+        self.eventListener = eventListener
+
+    def run(self):
+        gpio.addEventListener(self.eventListener, eventHandler)
+        while True:
+            time.sleep(1)
 
 def initRelays():
     for r in Relay.objects.filter(isNormallyClosed=True):
@@ -440,13 +451,17 @@ def eventHandler(actionable):
     actionable.actuate()
 
 def initButtons():
-    for button in Switch.objects.all():
-        gpio.addEventListener(button, eventHandler)
-    logger.info("Buttons initiated")
+    for switch in Switch.objects.all():
+        eventsMonitor = EventsMonitor(switch)
+        eventsMonitor.setDaemon(True)
+        eventsMonitor.start()
+    logger.info("Switches initiated")
 
 def initGasSensors():
     for gsensor in GasSensor.objects.all():
-        gpio.addEventListener(gsensor, eventHandler)
+        gasSensorMonitor = EventsMonitor(gsensor)
+        gasSensorMonitor.setDaemon(True)
+        gasSensorMonitor.start()
     logger.info("Gas sensors initiated")
 
 def initClocks():

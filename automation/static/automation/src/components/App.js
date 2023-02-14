@@ -14,8 +14,7 @@ class App extends Component {
 	};
 	
 	state = {
-		screen: this.props.screen,
-		alarmArmed: false
+		screen: this.props.screen
 	};
 	
     navigate = (screen) => {
