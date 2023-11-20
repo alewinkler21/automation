@@ -101,31 +101,7 @@ class PIRSensorMonitor(Thread):
                     self.sensor.actuate()
                     if self.sensor.camera:
                         logger.info("Movement detected! let's take a picture.")
-                        with PiCamera() as camera:
-                            try:
-                                effects = ["cartoon"]
-                                imageId = uuid.uuid1().hex
-                                camera.resolution = (3280, 2464)
-                                for effect in effects:
-                                    imageFileName = "{}_{}{}".format(imageId, effect, ".jpg")
-                                    imageFilePath = "{}{}".format(AUTOMATION["mediaPath"], imageFileName)
-                                    camera.image_effect = effect
-                                    camera.capture(imageFilePath)
-                                    # save metadata
-                                    media = Media()
-                                    media.thumbnail = imageFileName
-                                    media.videoFile = ""
-                                    media.movementDetected = True
-                                    media.save()
-                                    # put media in analyzer queue
-                                    redis_conn.sadd("photos", media.id)
-                                    time.sleep(1)
-                            except PiCameraMMALError as error:
-                                logger.error(error)
-                                break
-                            except:
-                                logger.error("Photographer:Unexpected error:{}".format(sys.exc_info()[0]))
-                                break
+                        self.__recordVideo()
                 else:
                     logger.debug("Movement ignored")
             else:
@@ -133,6 +109,55 @@ class PIRSensorMonitor(Thread):
             previousState = movement
             time.sleep(1)
             
+    def __takePicture(self):
+        with PiCamera() as camera:
+            try:
+                effects = ["cartoon"]
+                imageId = uuid.uuid1().hex
+                #camera.resolution = (3280, 2464)
+                for effect in effects:
+                    imageFileName = "{}_{}{}".format(imageId, effect, ".jpg")
+                    imageFilePath = "{}{}".format(AUTOMATION["mediaPath"], imageFileName)
+                    camera.image_effect = effect
+                    camera.capture(imageFilePath)
+                    # save metadata
+                    media = Media()
+                    media.thumbnail = imageFileName
+                    media.videoFile = ""
+                    media.movementDetected = True
+                    media.save()
+                    # put media in analyzer queue
+                    redis_conn.sadd("photos", media.id)
+                    time.sleep(1)
+            except PiCameraMMALError as error:
+                logger.error(error)
+            except:
+                logger.error("Photographer:Unexpected error:{}".format(sys.exc_info()[0]))
+            
+    def __recordVideo(self):
+        with PiCamera() as camera:
+            try:
+                uniqueId = uuid.uuid1().hex
+                videoFile = "{}.h264".format(uniqueId)
+                # record video
+                camera.start_recording("{}{}".format(AUTOMATION["mediaPath"], videoFile))
+                camera.wait_recording(AUTOMATION["videoDuration"])
+                camera.stop_recording()
+                # convert to mp4 and delete h264 file
+                MP4file = videoFile.replace("h264", "mp4")
+                subprocess.run(["MP4Box", "-quiet", "-add", "{}{}".format(AUTOMATION["mediaPath"], videoFile), 
+                                "{}{}".format(AUTOMATION["mediaPath"], MP4file)], stdout=subprocess.DEVNULL)
+                remove("{}{}".format(AUTOMATION["mediaPath"], videoFile))
+                # save metadata
+                media = Media()
+                media.videoFile = MP4file
+                media.movementDetected = True
+                media.save()
+            except PiCameraMMALError as error:
+                logger.error(error)
+            except:
+                logger.error("startRecordingVideo:Unexpected error:{}".format(sys.exc_info()[0]))
+
 class PhotoAnalysis(Thread):
     thr = 0.8
     net = cv2.dnn.readNetFromCaffe("{}{}".format(AUTOMATION["modelsPath"], "MobileNetSSD_deploy.prototxt"), 
@@ -170,7 +195,7 @@ class PhotoAnalysis(Thread):
                         media.delete()
                         if media.thumbnail:
                             remove("{}{}".format(AUTOMATION['mediaPath'], media.thumbnail))
-            time.sleep(10)
+            time.sleep(1)
 
     def __classify(self, media):
         img = cv2.imread("{}{}".format(AUTOMATION["mediaPath"], media.thumbnail))

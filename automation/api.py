@@ -70,7 +70,7 @@ class GetMedia(APIView):
     def get(self, format=None):
         last = Media.objects.last()
         lastId = last.id if last else 0
-        media = Media.objects.filter(classification__isnull=False).order_by('-dateCreated')
+        media = Media.objects.filter(videoFile__isnull=False).order_by('-dateCreated')
         serializer = MediaSerializer(media, many=True)
         
         return JSONResponse(serializer.data)

@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import key from "weak-key";
-import ReactPaginate from 'react-paginate';
 import DeleteVideo from "./DeleteVideo";
 import ShowVideo from "./ShowVideo";
 
@@ -12,10 +11,7 @@ class Camera extends Component {
 			showVideo: false,
 			showDelete: false,
 			fetching: false,
-			delay: 5000,
-			offset: 0,
-		      perPage: 2,
-		      currentPage: 1};
+			delay: 5000};
 
 	componentDidMount() {
 		this.fetchData();
@@ -40,31 +36,8 @@ class Camera extends Component {
 		.catch(error => console.error('Error:', error))
 		.then(response => {
 			this.setState({data: response, 
-							fetching: false,
-							pageCount: Math.ceil(response.length / this.state.perPage)});
+							fetching: false});
 			});
-	}
-	
-	paginationControls() {
-		return <div className="pagination">
-		        <ReactPaginate
-			        breakClassName={''}
-			        breakLinkClassName={'has-text-white'}
-			        containerClassName={'pagination-list'}
-			        pageClassName={'pagination-link'}
-			        pageLinkClassName={'has-text-white'}
-			        previousClassName={'pagination-previous'}
-			        previousLinkClassName={'has-text-white'}
-			        nextClassName={'pagination-next'}
-			        nextLinkClassName={'has-text-white'}
-			        activeClassName={'is-current'}
-		            previousLabel={"<"}
-		            nextLabel={">"}
-		            breakLabel={"..."}
-		            pageCount={this.state.pageCount}
-		            marginPagesDisplayed={2}
-		            pageRangeDisplayed={5}/>
-		        </div>;
 	}
 	
 	showVideo(video) {
@@ -125,23 +98,12 @@ class Camera extends Component {
 		if (!this.state.data || this.state.data.length == 0) {
 			return (<div className="has-text-centered">No hay archivos multimedia</div>);
 		}
-
-		var popup = this.popUp();
-		var pag = this.paginationControls();
-
-		var lastVideo = this.state.data[0];
-		var currentSituation = <a href="#" onClick={() => this.showVideo(lastVideo)}>{this.videoDescription(lastVideo)}</a>;
-		
+		var popup = this.popUp();		
 		return <div>
 				{popup}
-				<div className="notification has-text-black">
-					<p>Situación actual</p>
-					{currentSituation}
-				</div>
-				<p>Detecciones</p>
 				<ul className="has-text-centered">  
 				{this.state.data.slice(1).map(video => (
-					<li key={video.id} className={video.movementDetected ? "notification has-text-black is-danger" : "notification has-text-black is-grey"}>
+					<li key={video.id} className="notification has-text-black is-grey">
 					<div className="columns is-mobile">
 						<div className="column">
 							<a href="#" onClick={() => this.showVideo(video)}>
@@ -156,7 +118,6 @@ class Camera extends Component {
 					</li>
 					))}
 				</ul>
-				{pag}
 			</div>;
 	}
 }

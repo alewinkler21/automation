@@ -127,7 +127,7 @@ class App extends Component {
 							</span> 
 						</button>						
 						}
-						<button className="button is-large" href="#" onClick={() => this.navigate("photographer")}>
+						<button className="button is-large" href="#" onClick={() => this.navigate("camera")}>
 							<span className="icon is-medium"> 
 								<i className="fas fa-lg fa-camera-retro"></i>
 							</span>
