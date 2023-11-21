@@ -3,7 +3,7 @@
 @import "bulma-0.8.0/sass/utilities/functions";
 
 /* lights */
-$turned-on: #C00C30;
+$turned-on: $orange;
 $turned-on-invert: findColorInvert($turned-on);
 
 $primary: #1A3B88;
@@ -42,4 +42,9 @@ html {
 
 
 .navbar-menu {
+}
+
+.action-button {
+	background-color: silver;
+	width: 250px;
 }

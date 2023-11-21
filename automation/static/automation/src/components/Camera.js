@@ -96,7 +96,7 @@ class Camera extends Component {
 	
 	render() {
 		if (!this.state.data || this.state.data.length == 0) {
-			return (<div className="has-text-centered">No hay archivos multimedia</div>);
+			return (<div className="has-text-centered has-text-white">No hay archivos multimedia</div>);
 		}
 		var popup = this.popUp();		
 		return <div>

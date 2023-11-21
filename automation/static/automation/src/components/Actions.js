@@ -13,7 +13,7 @@ class Buttons extends Component {
   executeaction(action) {
 	var url = 'executeaction/';
 	
-	var data = {action: action.id, priority: 1, duration:3600, who: 'manual'};
+	var data = {action: action.id, priority: 1, duration:10800, who: 'manual'};
 	
     const value = '; ' + document.cookie;
     const parts = value.split('; ' + 'csrftoken' + '=');
@@ -74,7 +74,7 @@ class Buttons extends Component {
 	  return <ul className="has-text-centered">  
 	  {this.state.data.map(action => (
 			  <li key={action.id} className={action.status ? "notification is-turned-on" : "notification"}>
-	  		  <button className="button" key={action.id} onClick={() => this.executeaction(action)}>
+	  		  <button className="button action-button" key={action.id} onClick={() => this.executeaction(action)}>
 	  		  {action.description}
 	  		  </button>
 	  		  <p className="has-text-black">{this.showActionExpiration(action)}</p>
