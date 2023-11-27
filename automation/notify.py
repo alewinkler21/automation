@@ -29,7 +29,7 @@ class Client:
             logger.info("SMS sent to {}".format(destiny))
 
 def defaultClient():
-    return Client("MAZJRMMMEZM2NMYTQWNT", "NDdhOTdlMDY4NmEyNjIwMTMyODNjNWUyZDQ2Mjg5")
+    return Client("XXX", "YYY")
 
 def test():
     c = defaultClient()

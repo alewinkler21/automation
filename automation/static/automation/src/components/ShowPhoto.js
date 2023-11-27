@@ -18,7 +18,7 @@ class ShowPhoto extends Component {
 	}
 	
     share(){
-		var url = "https://micamara.ddns.net:8443/camera/" + this.state.photo.thumbnail;
+		var url = "https://your.domain.com/camera/" + this.state.photo.thumbnail;
         if (navigator.share) {
           navigator.share({
             title: 'Compartir foto',
